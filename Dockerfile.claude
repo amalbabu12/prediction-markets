@@ -1,0 +1,37 @@
+# Development container for running Claude Code with --dangerously-skip-permissions.
+# The container provides the isolation that makes this flag safe to use.
+
+FROM node:20-slim
+
+# Python + essentials + gosu (for dropping root in entrypoint)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    git \
+    curl \
+    sqlite3 \
+    gosu \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+# Create a non-root user (required for --dangerously-skip-permissions)
+RUN useradd -m -s /bin/bash claude
+
+# Install project Python dependencies
+WORKDIR /workspace
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages
+RUN chown -R claude:claude /workspace
+
+ENV PYTHONUNBUFFERED=1 \
+    DB_PATH=/workspace/data/markets.db
+
+# Entrypoint fixes volume permissions at runtime, then drops to non-root
+COPY entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["claude", "--dangerously-skip-permissions"]
