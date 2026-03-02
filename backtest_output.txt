@@ -1,0 +1,62 @@
+=================================================================
+Arbitrage Strategy Backtest — Mock Prediction Market Data
+=================================================================
+
+[1] Building mock markets (15 pairs, 30 markets total, 30 trading days) ...
+    Platforms: {'kalshi': 15, 'polymarket': 15}
+    Outcomes:  {'YES': 16, 'NO': 14}
+
+[2] Generating synthetic topic-clustered embeddings ...
+    Shape: (30, 64)  |  L2-norms ≈ 1.000
+
+[3] Running KNN neighbor search (k=4) ...
+    Found 59 unique neighbor pairs
+
+[4] Discovering relationships via mock LLM ...
+    Total discovered pairs:   32
+    Cross-platform pairs:     20
+    Same-outcome pairs:       32
+    Sample pairs:
+      [other] k1(kalshi) ↔ k3(kalshi)  same=True  conf=0.85
+      [other] p1(polymarket) ↔ k4(kalshi)  same=True  conf=0.85
+      [other] p1(polymarket) ↔ k2(kalshi)  same=True  conf=0.85
+
+[5] Evaluating relationship accuracy vs ground-truth outcomes ...
+    Evaluable pairs:    32 / 32
+    Overall accuracy:   46.9%
+    Cluster accuracy:   45.0%
+    Confusion:          {'TP': 15, 'FP': 17, 'TN': 0, 'FN': 0}
+    By category:
+      other           46.9%
+
+[6] Running arbitrage backtest over 30 days ...
+    Entry threshold: 4%  |  Transaction cost: 2%
+
+─────────────────────────────────────────────────────────────────
+  BACKTEST RESULTS
+─────────────────────────────────────────────────────────────────
+  Trades executed:        54
+  Profitable trades:      37  (68.5%)
+  Pair match rate:        26/54  (48.1%)
+  Mean entry spread:      8.20%
+  Mean gross P&L/trade:   -0.0291
+  Mean net P&L/trade:     -0.0491
+  Total net P&L:          -2.6536
+  Sharpe ratio:           -0.069
+─────────────────────────────────────────────────────────────────
+
+  Top 5 trades by net P&L:
+    p8<>p10               spread=0.142  net_pnl=+1.1225  [YES/NO]  ✓
+    p4<>p5                spread=0.107  net_pnl=+1.0875  [YES/NO]  ✓
+    p13<>p14              spread=0.102  net_pnl=+1.0820  [YES/NO]  ✓
+    p12<>p14              spread=0.088  net_pnl=+1.0676  [YES/NO]  ✓
+    p12<>k15              spread=0.079  net_pnl=+1.0590  [YES/NO]  ✓
+
+  Worst 3 trades:
+    k5<>p4                spread=0.047  net_pnl=-0.9729  [NO/YES]  ✗
+    p10<>k9               spread=0.049  net_pnl=-0.9705  [NO/YES]  ✗
+    p6<>k8                spread=0.054  net_pnl=-0.9656  [NO/YES]  ✗
+
+[OK] Backtest complete.
+
+Results saved to /workspace/backtest_results.json
