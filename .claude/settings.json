@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 /claude-hooks/stop.py"
+      }
+    ]
+  },
+  "mcpServers": {
+    "messenger": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["/claude-mcp/messenger.py"]
+    }
+  }
+}

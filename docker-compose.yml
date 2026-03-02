@@ -1,0 +1,55 @@
+services:
+  # Claude Code dev environment with --dangerously-skip-permissions
+  # Safe because the container provides the isolation.
+  # Run: docker compose run --rm claude
+  claude:
+    build:
+      context: .
+      dockerfile: Dockerfile.claude
+    volumes:
+      - .:/workspace              # Full project mounted — Claude can read/write everything
+      - ./data:/workspace/data    # SQLite DB
+      - claude-home:/home/claude/.claude # Persist Claude settings/memory across runs
+    environment:
+      - DB_PATH=/workspace/data/markets.db
+    stdin_open: true              # Keep stdin open (required for interactive Claude)
+    tty: true                     # Allocate a TTY
+    working_dir: /workspace
+    command: claude --dangerously-skip-permissions
+
+  collector:
+    build: .
+    volumes:
+      - ./data:/data          # SQLite DB persists here on the host
+    env_file:
+      - .env                  # KALSHI_API_KEY_ID, KALSHI_PRIVATE_KEY_PATH, etc.
+    environment:
+      - DB_PATH=/data/markets.db
+
+  # Convenience service: run full history collection once
+  history:
+    build: .
+    volumes:
+      - ./data:/data
+    env_file:
+      - .env
+    environment:
+      - DB_PATH=/data/markets.db
+    command: python main.py history --price-fidelity 60 --candle-intervals 60 1440
+    profiles: ["history"]     # docker compose --profile history up
+
+  # Convenience service: continuous snapshots every 5 minutes
+  continuous:
+    build: .
+    volumes:
+      - ./data:/data
+    env_file:
+      - .env
+    environment:
+      - DB_PATH=/data/markets.db
+    command: python main.py continuous --interval 300
+    restart: unless-stopped
+    profiles: ["continuous"]  # docker compose --profile continuous up
+
+volumes:
+  claude-home:   # Named volume so ~/.claude persists between container runs

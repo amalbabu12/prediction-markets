@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/amalb/PersonalProjects/PredictionMarkets && docker compose run --rm collector 2>&1)"
+    ]
+  }
+}
