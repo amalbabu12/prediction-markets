@@ -24,14 +24,20 @@ pair as same-outcome AND the discovered spread exceeds transaction costs.
 
 Run
 ---
-    python backtest_arbitrage.py
+    python backtest_arbitrage.py [--mock]
+
+    Without --mock: uses HuggingFace typeform/distilbert-base-uncased-mnli
+                    for real NLI-based pair classification.
+    With --mock:    uses the deterministic MockLLMBackend (fast, no model download).
 
 Writes results to: backtest_results.json
 """
 from __future__ import annotations
 
 import asyncio
+import ctypes
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass, asdict, field
@@ -39,6 +45,25 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
+
+# ── HuggingFace / torch environment setup ─────────────────────────────────────
+# torch requires libcudart.so.12 which is installed alongside the nvidia-*
+# pip packages. Load it explicitly so the dynamic linker can find it before
+# torch's own __init__.py attempts ctypes.CDLL("libtorch_global_deps.so").
+_CUDART_PATH = (
+    "/home/agent/.local/lib/python3.11/site-packages/"
+    "nvidia/cuda_runtime/lib/libcudart.so.12"
+)
+if os.path.exists(_CUDART_PATH):
+    try:
+        ctypes.CDLL(_CUDART_PATH)
+    except OSError:
+        pass  # GPU not available; torch CPU path will still work
+
+# Make site-packages visible (needed when running directly, not via pip install)
+_LOCAL_SITE = "/home/agent/.local/lib/python3.11/site-packages"
+if _LOCAL_SITE not in sys.path:
+    sys.path.insert(0, _LOCAL_SITE)
 
 sys.path.insert(0, "/workspace")
 
@@ -102,6 +127,149 @@ class MockLLMBackend(LLMBackend):
                 "rationale": "mock: consecutive questions cover the same event",
             })
         return json.dumps({"pairs": pairs})
+
+
+# ── Real HuggingFace NLI backend ───────────────────────────────────────────────
+
+class HuggingFaceNLIBackend(LLMBackend):
+    """
+    Pair-classification backend using a real HuggingFace NLI model.
+
+    Model: typeform/distilbert-base-uncased-mnli  (66 M params, ~264 MB)
+    ─────────────────────────────────────────────────────────────────────
+    A DistilBERT model fine-tuned on Multi-Genre NLI, available freely on
+    the HuggingFace Hub.  It outputs ENTAILMENT / NEUTRAL / CONTRADICTION
+    probabilities for a (premise, hypothesis) pair.
+
+    Pair classification strategy
+    ────────────────────────────
+    For each (question_a, question_b) candidate pair:
+
+      premise    = 'If the answer to "<question_a>" is YES, then'
+      hypothesis = 'the answer to "<question_b>" is also YES'
+
+    If P(ENTAILMENT) > entailment_threshold  → is_same_outcome = True
+    If P(CONTRADICTION) > contradiction_threshold → is_same_outcome = False
+    Otherwise the pair is not included in the output (below min_confidence).
+
+    Category labelling is handled by keyword matching (same heuristic as the
+    mock backend) since categorisation is a secondary concern; the key
+    improvement over the mock is the data-driven pair classification.
+
+    Args:
+        entailment_threshold:    Min entailment score to emit is_same_outcome=True.
+        contradiction_threshold: Min contradiction score to emit is_same_outcome=False.
+        device:                  'cpu' or 'cuda'.  Defaults to 'cpu' for portability.
+    """
+
+    _MODEL_ID = "typeform/distilbert-base-uncased-mnli"
+
+    def __init__(
+        self,
+        entailment_threshold: float = 0.25,
+        contradiction_threshold: float = 0.25,
+        device: str = "cpu",
+    ) -> None:
+        self._ent_thresh  = entailment_threshold
+        self._con_thresh  = contradiction_threshold
+        self._device      = device
+        self._pipeline    = None   # lazy-loaded on first call
+
+    def _load(self) -> None:
+        """Lazy-load the NLI pipeline (downloads model on first use)."""
+        if self._pipeline is not None:
+            return
+        import warnings
+        warnings.filterwarnings("ignore", category=UserWarning)
+        from transformers import pipeline as hf_pipeline
+        print(f"    [HF] Loading {self._MODEL_ID} on {self._device} ...")
+        self._pipeline = hf_pipeline(
+            "text-classification",
+            model=self._MODEL_ID,
+            device=self._device,
+            top_k=None,          # return all label scores
+        )
+        print(f"    [HF] Model ready.")
+
+    def _nli_score(self, premise: str, hypothesis: str) -> dict[str, float]:
+        """Return {label: score} dict for a single (premise, hypothesis) pair."""
+        results = self._pipeline({"text": premise, "text_pair": hypothesis})
+        return {r["label"].upper(): r["score"] for r in results}
+
+    def _label_category(self, prompt: str) -> str:
+        """Keyword-based category labelling (fast, no model call needed)."""
+        p = prompt.lower()
+        if any(w in p for w in ("btc", "bitcoin", "crypto", "eth")):
+            return '{"category": "crypto"}'
+        if any(w in p for w in ("election", "president", "vote", "senate")):
+            return '{"category": "elections"}'
+        if any(w in p for w in ("fed", "rate", "inflation", "gdp", "economy",
+                                 "unemployment", "recession", "cpi")):
+            return '{"category": "economy"}'
+        return '{"category": "other"}'
+
+    def _discover_pairs(self, prompt: str) -> str:
+        """NLI-based pair discovery for a group of questions."""
+        self._load()
+
+        # Extract category via keywords
+        p = prompt.lower()
+        if any(w in p for w in ("btc", "bitcoin", "crypto", "eth")):
+            category = "crypto"
+        elif any(w in p for w in ("election", "president", "vote", "senate")):
+            category = "elections"
+        elif any(w in p for w in ("fed", "rate", "inflation", "gdp", "economy",
+                                  "unemployment", "recession", "cpi")):
+            category = "economy"
+        else:
+            category = "other"
+
+        questions = re.findall(r"^\d+\.\s+(.+)$", prompt, re.MULTILINE)
+        if len(questions) < 2:
+            return json.dumps({"category": category, "pairs": []})
+
+        pairs: list[dict] = []
+        for i in range(len(questions)):
+            for j in range(i + 1, len(questions)):
+                q_a = questions[i]
+                q_b = questions[j]
+
+                premise    = f'If the answer to "{q_a}" is YES, then'
+                hypothesis = f'the answer to "{q_b}" is also YES'
+                scores     = self._nli_score(premise, hypothesis)
+
+                ent = scores.get("ENTAILMENT", 0.0)
+                con = scores.get("CONTRADICTION", 0.0)
+
+                if ent >= self._ent_thresh:
+                    pairs.append({
+                        "question_a":      q_a,
+                        "question_b":      q_b,
+                        "is_same_outcome": True,
+                        "confidence_score": round(float(ent), 4),
+                        "rationale": f"NLI entailment={ent:.2f}",
+                    })
+                elif con >= self._con_thresh:
+                    pairs.append({
+                        "question_a":      q_a,
+                        "question_b":      q_b,
+                        "is_same_outcome": False,
+                        "confidence_score": round(float(con), 4),
+                        "rationale": f"NLI contradiction={con:.2f}",
+                    })
+
+        return json.dumps({"category": category, "pairs": pairs})
+
+    async def generate(
+        self,
+        user_prompt: str,
+        system_prompt: str = "",
+        max_new_tokens: int = 2048,
+    ) -> str:
+        # Dispatch: pairs prompt vs. category-only prompt
+        if '"pairs"' in user_prompt:
+            return await asyncio.to_thread(self._discover_pairs, user_prompt)
+        return self._label_category(user_prompt)
 
 
 # ── Mock market data with price time-series ───────────────────────────────────
@@ -530,8 +698,13 @@ def summarise_results(
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 async def main() -> dict:
+    use_mock = "--mock" in sys.argv
+
     print("=" * 65)
-    print("Arbitrage Strategy Backtest — Mock Prediction Market Data")
+    if use_mock:
+        print("Arbitrage Strategy Backtest — Mock Prediction Market Data")
+    else:
+        print("Arbitrage Strategy Backtest — Real HuggingFace NLI Model")
     print("=" * 65)
 
     rng = np.random.default_rng(RNG_SEED)
@@ -553,9 +726,18 @@ async def main() -> dict:
     neighbor_pairs = find_neighbors(df, embeddings, k=4)
     print(f"    Found {len(neighbor_pairs)} unique neighbor pairs")
 
-    # ── 4. LLM relationship discovery (mock) ──────────────────────────────────
-    print("\n[4] Discovering relationships via mock LLM ...")
-    backend = MockLLMBackend()
+    # ── 4. LLM relationship discovery ─────────────────────────────────────────
+    if use_mock:
+        print("\n[4] Discovering relationships via mock LLM ...")
+        backend: LLMBackend = MockLLMBackend()
+    else:
+        print("\n[4] Discovering relationships via HuggingFace NLI model ...")
+        print(f"    Model: {HuggingFaceNLIBackend._MODEL_ID}")
+        backend = HuggingFaceNLIBackend(
+            entailment_threshold=0.25,
+            contradiction_threshold=0.25,
+            device="cpu",
+        )
     pairs = await discover_relationships(
         df,
         neighbor_pairs=neighbor_pairs,
@@ -653,7 +835,8 @@ async def main() -> dict:
 
 if __name__ == "__main__":
     results = asyncio.run(main())
-    out_path = "/workspace/backtest_results.json"
+    use_mock = "--mock" in sys.argv
+    out_path = "/workspace/backtest_results.json" if use_mock else "/workspace/backtest_results_hf.json"
     with open(out_path, "w") as fh:
         json.dump(results, fh, indent=2)
     print(f"\nResults saved to {out_path}")

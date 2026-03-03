@@ -1,0 +1,710 @@
+Pair discovery failed: cannot import name 'pipeline' from 'transformers' (/home/agent/.local/lib/python3.11/site-packages/transformers/__init__.py)
+=================================================================
+Arbitrage Strategy Backtest — Real HuggingFace NLI Model
+=================================================================
+
+[1] Building mock markets (15 pairs, 30 markets total, 30 trading days) ...
+    Platforms: {'kalshi': 15, 'polymarket': 15}
+    Outcomes:  {'YES': 16, 'NO': 14}
+
+[2] Generating synthetic topic-clustered embeddings ...
+    Shape: (30, 64)  |  L2-norms ≈ 1.000
+
+[3] Running KNN neighbor search (k=4) ...
+    Found 59 unique neighbor pairs
+
+[4] Discovering relationships via HuggingFace NLI model ...
+    Model: typeform/distilbert-base-uncased-mnli
+    [HF] Loading typeform/distilbert-base-uncased-mnli on cpu ...
+    [HF] Loading typeform/distilbert-base-uncased-mnli on cpu ...
+    [HF] Loading typeform/distilbert-base-uncased-mnli on cpu ...
+    [HF] Loading typeform/distilbert-base-uncased-mnli on cpu ...
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s]Loading weights:   1%|          | 1/104 [00:00<00:00, 5295.84it/s, Materializing param=classifier.bias]Loading weights:   1%|          | 1/104 [00:00<00:00, 2668.13it/s, Materializing param=classifier.bias]Loading weights:   2%|▏         | 2/104 [00:00<00:00, 2387.88it/s, Materializing param=classifier.weight]Loading weights:   2%|▏         | 2/104 [00:00<00:00, 2029.67it/s, Materializing param=classifier.weight]Loading weights:   3%|▎         | 3/104 [00:00<00:00, 1011.73it/s, Materializing param=distilbert.embeddings.LayerNorm.bias]Loading weights:   3%|▎         | 3/104 [00:00<00:00, 934.14it/s, Materializing param=distilbert.embeddings.LayerNorm.bias] Loading weights:   4%|▍         | 4/104 [00:00<00:00, 325.38it/s, Materializing param=distilbert.embeddings.LayerNorm.weight]Loading weights:   4%|▍         | 4/104 [00:00<00:00, 315.50it/s, Materializing param=distilbert.embeddings.LayerNorm.weight]Loading weights:   5%|▍         | 5/104 [00:00<00:00, 302.35it/s, Materializing param=distilbert.embeddings.position_embeddings.weight]Loading weights:   5%|▍         | 5/104 [00:00<00:00, 240.39it/s, Materializing param=distilbert.embeddings.position_embeddings.weight]Loading weights:   6%|▌         | 6/104 [00:00<00:00, 259.36it/s, Materializing param=distilbert.embeddings.word_embeddings.weight]    Loading weights:   6%|▌         | 6/104 [00:00<00:00, 257.16it/s, Materializing param=distilbert.embeddings.word_embeddings.weight]Loading weights:   7%|▋         | 7/104 [00:00<00:00, 264.97it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.bias]Loading weights:   7%|▋         | 7/104 [00:00<00:00, 237.96it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.bias]Loading weights:   8%|▊         | 8/104 [00:00<00:00, 262.99it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.weight]Loading weights:   8%|▊         | 8/104 [00:00<00:00, 261.54it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.weight]Loading weights:   9%|▊         | 9/104 [00:00<00:00, 288.40it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.bias]Loading weights:   9%|▊         | 9/104 [00:00<00:00, 286.35it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.bias]Loading weights:  10%|▉         | 10/104 [00:00<00:00, 305.06it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.weight]Loading weights:  10%|▉         | 10/104 [00:00<00:00, 301.72it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.weight]Loading weights:  11%|█         | 11/104 [00:00<00:00, 319.19it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.bias]    Loading weights:  11%|█         | 11/104 [00:00<00:00, 312.48it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.bias]Loading weights:  12%|█▏        | 12/104 [00:00<00:00, 314.47it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.weight]Loading weights:  12%|█▏        | 12/104 [00:00<00:00, 303.52it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.weight]Loading weights:  12%|█▎        | 13/104 [00:00<00:00, 321.89it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.bias]  Loading weights:  12%|█▎        | 13/104 [00:00<00:00, 306.45it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.bias]Loading weights:  13%|█▎        | 14/104 [00:00<00:00, 314.39it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.weight]Loading weights:  13%|█▎        | 14/104 [00:00<00:00, 305.99it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.weight]Loading weights:  14%|█▍        | 15/104 [00:00<00:00, 319.31it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.bias]         Loading weights:  14%|█▍        | 15/104 [00:00<00:00, 312.88it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.bias]Loading weights:  15%|█▌        | 16/104 [00:00<00:00, 328.99it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.weight]Loading weights:  15%|█▌        | 16/104 [00:00<00:00, 327.77it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.weight]Loading weights:  16%|█▋        | 17/104 [00:00<00:00, 337.91it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.bias]  Loading weights:  16%|█▋        | 17/104 [00:00<00:00, 336.86it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.bias]Loading weights:  17%|█▋        | 18/104 [00:00<00:00, 342.48it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.weight]Loading weights:  17%|█▋        | 18/104 [00:00<00:00, 341.45it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.weight]Loading weights:  18%|█▊        | 19/104 [00:00<00:00, 336.09it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.bias]Loading weights:  18%|█▊        | 19/104 [00:00<00:00, 325.78it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.bias]Loading weights:  19%|█▉        | 20/104 [00:00<00:00, 332.11it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.weight]Loading weights:  19%|█▉        | 20/104 [00:00<00:00, 331.14it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.weight]Loading weights:  20%|██        | 21/104 [00:00<00:00, 336.42it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.bias]      Loading weights:  20%|██        | 21/104 [00:00<00:00, 335.61it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.bias]Loading weights:  21%|██        | 22/104 [00:00<00:00, 346.00it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.weight]Loading weights:  21%|██        | 22/104 [00:00<00:00, 345.16it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.weight]Loading weights:  22%|██▏       | 23/104 [00:00<00:00, 341.64it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.bias]Loading weights:  22%|██▏       | 23/104 [00:00<00:00, 334.82it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.bias]Loading weights:  23%|██▎       | 24/104 [00:00<00:00, 346.89it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.weight]Loading weights:  23%|██▎       | 24/104 [00:00<00:00, 346.14it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.weight]Loading weights:  24%|██▍       | 25/104 [00:00<00:00, 341.07it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.bias]Loading weights:  24%|██▍       | 25/104 [00:00<00:00, 320.63it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.bias]Loading weights:  25%|██▌       | 26/104 [00:00<00:00, 321.92it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.weight]Loading weights:  25%|██▌       | 26/104 [00:00<00:00, 316.76it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.weight]Loading weights:  26%|██▌       | 27/104 [00:00<00:00, 317.72it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.bias]    Loading weights:  26%|██▌       | 27/104 [00:00<00:00, 317.05it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.bias]Loading weights:  27%|██▋       | 28/104 [00:00<00:00, 318.72it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.weight]Loading weights:  27%|██▋       | 28/104 [00:00<00:00, 315.83it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.weight]Loading weights:  28%|██▊       | 29/104 [00:00<00:00, 324.50it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.bias]  Loading weights:  28%|██▊       | 29/104 [00:00<00:00, 320.01it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.bias]Loading weights:  29%|██▉       | 30/104 [00:00<00:00, 313.65it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight]Loading weights:  29%|██▉       | 30/104 [00:00<00:00, 312.61it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight]Loading weights:  30%|██▉       | 31/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight]Loading weights:  30%|██▉       | 31/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.bias]         Loading weights:  30%|██▉       | 31/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.bias]Loading weights:  31%|███       | 32/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.weight]Loading weights:  31%|███       | 32/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.weight]Loading weights:  32%|███▏      | 33/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.bias]  Loading weights:  32%|███▏      | 33/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.bias]Loading weights:  33%|███▎      | 34/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight]Loading weights:  33%|███▎      | 34/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight]Loading weights:  34%|███▎      | 35/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.bias]Loading weights:  34%|███▎      | 35/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.bias]Loading weights:  35%|███▍      | 36/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.weight]Loading weights:  35%|███▍      | 36/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.weight]Loading weights:  36%|███▌      | 37/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.bias]      Loading weights:  36%|███▌      | 37/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.bias]Loading weights:  37%|███▋      | 38/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.weight]Loading weights:  37%|███▋      | 38/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.weight]Loading weights:  38%|███▊      | 39/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.bias]Loading weights:  38%|███▊      | 39/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.bias]Loading weights:  38%|███▊      | 40/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight]Loading weights:  38%|███▊      | 40/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight]Loading weights:  39%|███▉      | 41/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.bias]Loading weights:  39%|███▉      | 41/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.bias]Loading weights:  40%|████      | 42/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.weight]Loading weights:  40%|████      | 42/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.weight]Loading weights:  41%|████▏     | 43/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.bias]    Loading weights:  41%|████▏     | 43/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.bias]Loading weights:  42%|████▏     | 44/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight]Loading weights:  42%|████▏     | 44/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight]Loading weights:  43%|████▎     | 45/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.bias]  Loading weights:  43%|████▎     | 45/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.bias]Loading weights:  44%|████▍     | 46/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.weight]Loading weights:  44%|████▍     | 46/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.weight]Loading weights:  45%|████▌     | 47/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.bias]         Loading weights:  45%|████▌     | 47/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.bias]Loading weights:  46%|████▌     | 48/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.weight]Loading weights:  46%|████▌     | 48/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.weight]Loading weights:  47%|████▋     | 49/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.bias]  Loading weights:  47%|████▋     | 49/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.bias]Loading weights:  48%|████▊     | 50/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.weight]Loading weights:  48%|████▊     | 50/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.weight]Loading weights:  49%|████▉     | 51/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.bias]Loading weights:  49%|████▉     | 51/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.bias]Loading weights:  50%|█████     | 52/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.weight]Loading weights:  50%|█████     | 52/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.weight]Loading weights:  51%|█████     | 53/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.bias]      Loading weights:  51%|█████     | 53/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.bias]Loading weights:  52%|█████▏    | 54/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.weight]Loading weights:  52%|█████▏    | 54/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.weight]Loading weights:  53%|█████▎    | 55/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.bias]Loading weights:  53%|█████▎    | 55/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.bias]Loading weights:  54%|█████▍    | 56/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.weight]Loading weights:  54%|█████▍    | 56/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.weight]Loading weights:  55%|█████▍    | 57/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.bias]Loading weights:  55%|█████▍    | 57/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.bias]Loading weights:  56%|█████▌    | 58/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.weight]Loading weights:  56%|█████▌    | 58/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.weight]Loading weights:  57%|█████▋    | 59/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.bias]    Loading weights:  57%|█████▋    | 59/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.bias]Loading weights:  58%|█████▊    | 60/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.weight]Loading weights:  58%|█████▊    | 60/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.weight]Loading weights:  59%|█████▊    | 61/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.bias]  Loading weights:  59%|█████▊    | 61/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.bias]Loading weights:  60%|█████▉    | 62/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight]Loading weights:  60%|█████▉    | 62/104 [00:00<00:00, 306.47it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight]Loading weights:  61%|██████    | 63/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight]Loading weights:  61%|██████    | 63/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.bias]         Loading weights:  61%|██████    | 63/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.bias]Loading weights:  62%|██████▏   | 64/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.weight]Loading weights:  62%|██████▏   | 64/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.weight]Loading weights:  62%|██████▎   | 65/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.bias]  Loading weights:  62%|██████▎   | 65/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.bias]Loading weights:  63%|██████▎   | 66/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.weight]Loading weights:  63%|██████▎   | 66/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.weight]Loading weights:  64%|██████▍   | 67/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.bias]Loading weights:  64%|██████▍   | 67/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.bias]Loading weights:  65%|██████▌   | 68/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.weight]Loading weights:  65%|██████▌   | 68/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.weight]Loading weights:  66%|██████▋   | 69/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.bias]      Loading weights:  66%|██████▋   | 69/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.bias]Loading weights:  67%|██████▋   | 70/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.weight]Loading weights:  67%|██████▋   | 70/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.weight]Loading weights:  68%|██████▊   | 71/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.bias]Loading weights:  68%|██████▊   | 71/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.bias]Loading weights:  69%|██████▉   | 72/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.weight]Loading weights:  69%|██████▉   | 72/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.weight]Loading weights:  70%|███████   | 73/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.bias]Loading weights:  70%|███████   | 73/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.bias]Loading weights:  71%|███████   | 74/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.weight]Loading weights:  71%|███████   | 74/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.weight]Loading weights:  72%|███████▏  | 75/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.bias]    Loading weights:  72%|███████▏  | 75/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.bias]Loading weights:  73%|███████▎  | 76/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight]Loading weights:  73%|███████▎  | 76/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight]Loading weights:  74%|███████▍  | 77/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.bias]  Loading weights:  74%|███████▍  | 77/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.bias]Loading weights:  75%|███████▌  | 78/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.weight]Loading weights:  75%|███████▌  | 78/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.weight]Loading weights:  76%|███████▌  | 79/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.bias]         Loading weights:  76%|███████▌  | 79/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.bias]Loading weights:  77%|███████▋  | 80/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.weight]Loading weights:  77%|███████▋  | 80/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.weight]Loading weights:  78%|███████▊  | 81/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.bias]  Loading weights:  78%|███████▊  | 81/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.bias]Loading weights:  79%|███████▉  | 82/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.weight]Loading weights:  79%|███████▉  | 82/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.weight]Loading weights:  80%|███████▉  | 83/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.bias]Loading weights:  80%|███████▉  | 83/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.bias]Loading weights:  81%|████████  | 84/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.weight]Loading weights:  81%|████████  | 84/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.weight]Loading weights:  82%|████████▏ | 85/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.bias]      Loading weights:  82%|████████▏ | 85/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.bias]Loading weights:  83%|████████▎ | 86/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.weight]Loading weights:  83%|████████▎ | 86/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.weight]Loading weights:  84%|████████▎ | 87/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.bias]Loading weights:  84%|████████▎ | 87/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.bias]Loading weights:  85%|████████▍ | 88/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.weight]Loading weights:  85%|████████▍ | 88/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.weight]Loading weights:  86%|████████▌ | 89/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.bias]Loading weights:  86%|████████▌ | 89/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.bias]Loading weights:  87%|████████▋ | 90/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.weight]Loading weights:  87%|████████▋ | 90/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.weight]Loading weights:  88%|████████▊ | 91/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.bias]    Loading weights:  88%|████████▊ | 91/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.bias]Loading weights:  88%|████████▊ | 92/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.weight]Loading weights:  88%|████████▊ | 92/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.weight]Loading weights:  89%|████████▉ | 93/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias]  Loading weights:  89%|████████▉ | 93/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias]Loading weights:  90%|█████████ | 94/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.weight]Loading weights:  90%|█████████ | 94/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.weight]Loading weights:  91%|█████████▏| 95/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias]         Loading weights:  91%|█████████▏| 95/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias]Loading weights:  92%|█████████▏| 96/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.weight]Loading weights:  92%|█████████▏| 96/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.weight]Loading weights:  93%|█████████▎| 97/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.bias]  Loading weights:  93%|█████████▎| 97/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.bias]Loading weights:  94%|█████████▍| 98/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.weight]Loading weights:  94%|█████████▍| 98/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.weight]Loading weights:  95%|█████████▌| 99/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.bias]Loading weights:  95%|█████████▌| 99/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.bias]Loading weights:  96%|█████████▌| 100/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.weight]Loading weights:  96%|█████████▌| 100/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.weight]Loading weights:  97%|█████████▋| 101/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.bias]      Loading weights:  97%|█████████▋| 101/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.bias]Loading weights:  98%|█████████▊| 102/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.weight]Loading weights:  98%|█████████▊| 102/104 [00:00<00:00, 313.26it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.weight]Loading weights:  99%|█████████▉| 103/104 [00:00<00:00, 313.26it/s, Materializing param=pre_classifier.bias]                                Loading weights:  99%|█████████▉| 103/104 [00:00<00:00, 313.26it/s, Materializing param=pre_classifier.bias]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 313.26it/s, Materializing param=pre_classifier.weight]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 313.26it/s, Materializing param=pre_classifier.weight]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 346.38it/s, Materializing param=pre_classifier.weight]
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s]Loading weights:   1%|          | 1/104 [00:00<00:00, 22550.02it/s, Materializing param=classifier.bias]Loading weights:   1%|          | 1/104 [00:00<00:00, 5957.82it/s, Materializing param=classifier.bias] Loading weights:   2%|▏         | 2/104 [00:00<00:00, 3443.60it/s, Materializing param=classifier.weight]Loading weights:   2%|▏         | 2/104 [00:00<00:00, 2831.12it/s, Materializing param=classifier.weight]Loading weights:   3%|▎         | 3/104 [00:00<00:00, 1444.65it/s, Materializing param=distilbert.embeddings.LayerNorm.bias]Loading weights:   3%|▎         | 3/104 [00:00<00:00, 1284.36it/s, Materializing param=distilbert.embeddings.LayerNorm.bias]Loading weights:   4%|▍         | 4/104 [00:00<00:00, 1401.61it/s, Materializing param=distilbert.embeddings.LayerNorm.weight]Loading weights:   4%|▍         | 4/104 [00:00<00:00, 1343.57it/s, Materializing param=distilbert.embeddings.LayerNorm.weight]Loading weights:   5%|▍         | 5/104 [00:00<00:00, 1000.79it/s, Materializing param=distilbert.embeddings.position_embeddings.weight]Loading weights:   5%|▍         | 5/104 [00:00<00:00, 973.83it/s, Materializing param=distilbert.embeddings.position_embeddings.weight] 
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s][A
+Loading weights:   1%|          | 1/104 [00:00<00:00, 15420.24it/s, Materializing param=classifier.bias][A
+Loading weights:   1%|          | 1/104 [00:00<00:00, 506.74it/s, Materializing param=classifier.bias]  [A
+Loading weights:   2%|▏         | 2/104 [00:00<00:00, 288.92it/s, Materializing param=classifier.weight][A
+Loading weights:   2%|▏         | 2/104 [00:00<00:00, 275.72it/s, Materializing param=classifier.weight][A
+
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s][A[ALoading weights:   6%|▌         | 6/104 [00:00<00:00, 297.19it/s, Materializing param=distilbert.embeddings.word_embeddings.weight]    Loading weights:   6%|▌         | 6/104 [00:00<00:00, 271.15it/s, Materializing param=distilbert.embeddings.word_embeddings.weight]
+
+Loading weights:   1%|          | 1/104 [00:00<00:01, 67.18it/s, Materializing param=classifier.bias][A[A
+
+Loading weights:   1%|          | 1/104 [00:00<00:01, 56.85it/s, Materializing param=classifier.bias][A[ALoading weights:   7%|▋         | 7/104 [00:00<00:00, 178.32it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.bias]Loading weights:   7%|▋         | 7/104 [00:00<00:00, 173.58it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.bias]
+
+Loading weights:   2%|▏         | 2/104 [00:00<00:01, 78.42it/s, Materializing param=classifier.weight][A[A
+
+Loading weights:   2%|▏         | 2/104 [00:00<00:01, 77.77it/s, Materializing param=classifier.weight][A[ALoading weights:   8%|▊         | 8/104 [00:00<00:00, 183.45it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.weight]Loading weights:   8%|▊         | 8/104 [00:00<00:00, 182.67it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.weight]
+Loading weights:   3%|▎         | 3/104 [00:00<00:01, 78.11it/s, Materializing param=distilbert.embeddings.LayerNorm.bias][A
+Loading weights:   3%|▎         | 3/104 [00:00<00:01, 77.55it/s, Materializing param=distilbert.embeddings.LayerNorm.bias][ALoading weights:   9%|▊         | 9/104 [00:00<00:00, 196.85it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.bias]Loading weights:   9%|▊         | 9/104 [00:00<00:00, 196.03it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.bias]
+
+Loading weights:   3%|▎         | 3/104 [00:00<00:00, 102.67it/s, Materializing param=distilbert.embeddings.LayerNorm.bias][A[A
+
+Loading weights:   3%|▎         | 3/104 [00:00<00:00, 102.18it/s, Materializing param=distilbert.embeddings.LayerNorm.bias][A[ALoading weights:  10%|▉         | 10/104 [00:00<00:00, 211.46it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.weight]Loading weights:  10%|▉         | 10/104 [00:00<00:00, 210.87it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.weight]
+
+Loading weights:   4%|▍         | 4/104 [00:00<00:00, 132.65it/s, Materializing param=distilbert.embeddings.LayerNorm.weight][A[A
+
+Loading weights:   4%|▍         | 4/104 [00:00<00:00, 132.03it/s, Materializing param=distilbert.embeddings.LayerNorm.weight][A[ALoading weights:  11%|█         | 11/104 [00:00<00:00, 228.11it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.bias]    Loading weights:  11%|█         | 11/104 [00:00<00:00, 226.15it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.bias]
+Loading weights:   4%|▍         | 4/104 [00:00<00:01, 93.40it/s, Materializing param=distilbert.embeddings.LayerNorm.weight][A
+Loading weights:   4%|▍         | 4/104 [00:00<00:01, 92.81it/s, Materializing param=distilbert.embeddings.LayerNorm.weight][ALoading weights:  12%|█▏        | 12/104 [00:00<00:00, 239.37it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.weight]Loading weights:  12%|█▏        | 12/104 [00:00<00:00, 238.24it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.weight]Loading weights:  12%|█▎        | 13/104 [00:00<00:00, 254.37it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.bias]  Loading weights:  12%|█▎        | 13/104 [00:00<00:00, 253.65it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.bias]
+
+Loading weights:   5%|▍         | 5/104 [00:00<00:00, 146.07it/s, Materializing param=distilbert.embeddings.position_embeddings.weight][A[A
+
+Loading weights:   5%|▍         | 5/104 [00:00<00:00, 145.00it/s, Materializing param=distilbert.embeddings.position_embeddings.weight][A[ALoading weights:  13%|█▎        | 14/104 [00:00<00:00, 264.27it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.weight]Loading weights:  13%|█▎        | 14/104 [00:00<00:00, 263.39it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.weight]
+
+Loading weights:   6%|▌         | 6/104 [00:00<00:00, 167.72it/s, Materializing param=distilbert.embeddings.word_embeddings.weight]    [A[A
+
+Loading weights:   6%|▌         | 6/104 [00:00<00:00, 166.93it/s, Materializing param=distilbert.embeddings.word_embeddings.weight][A[ALoading weights:  14%|█▍        | 15/104 [00:00<00:00, 278.46it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.bias]         Loading weights:  14%|█▍        | 15/104 [00:00<00:00, 277.44it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.bias]
+Loading weights:   5%|▍         | 5/104 [00:00<00:00, 104.01it/s, Materializing param=distilbert.embeddings.position_embeddings.weight][A
+Loading weights:   5%|▍         | 5/104 [00:00<00:00, 103.70it/s, Materializing param=distilbert.embeddings.position_embeddings.weight][A
+
+Loading weights:   7%|▋         | 7/104 [00:00<00:00, 185.91it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.bias][A[A
+
+Loading weights:   7%|▋         | 7/104 [00:00<00:00, 184.74it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.bias][A[A
+Loading weights:   6%|▌         | 6/104 [00:00<00:00, 122.01it/s, Materializing param=distilbert.embeddings.word_embeddings.weight]    [A
+Loading weights:   6%|▌         | 6/104 [00:00<00:00, 121.50it/s, Materializing param=distilbert.embeddings.word_embeddings.weight][ALoading weights:  15%|█▌        | 16/104 [00:00<00:00, 282.96it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.weight]Loading weights:  15%|█▌        | 16/104 [00:00<00:00, 282.25it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.weight]
+
+Loading weights:   8%|▊         | 8/104 [00:00<00:00, 201.44it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.weight][A[A
+
+Loading weights:   8%|▊         | 8/104 [00:00<00:00, 200.50it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.weight][A[ALoading weights:  16%|█▋        | 17/104 [00:00<00:00, 290.95it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.bias]  Loading weights:  16%|█▋        | 17/104 [00:00<00:00, 290.04it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.bias]
+Loading weights:   7%|▋         | 7/104 [00:00<00:00, 133.78it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.bias][A
+Loading weights:   7%|▋         | 7/104 [00:00<00:00, 133.40it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.bias][ALoading weights:  17%|█▋        | 18/104 [00:00<00:00, 302.44it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.weight]Loading weights:  17%|█▋        | 18/104 [00:00<00:00, 301.63it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.weight]
+Loading weights:   8%|▊         | 8/104 [00:00<00:00, 149.75it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.weight][A
+Loading weights:   8%|▊         | 8/104 [00:00<00:00, 149.23it/s, Materializing param=distilbert.transformer.layer.0.attention.k_lin.weight][ALoading weights:  18%|█▊        | 19/104 [00:00<00:00, 312.74it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.bias]Loading weights:  18%|█▊        | 19/104 [00:00<00:00, 311.92it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.bias]
+Loading weights:   9%|▊         | 9/104 [00:00<00:00, 164.87it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.bias][A
+Loading weights:   9%|▊         | 9/104 [00:00<00:00, 164.29it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.bias][ALoading weights:  19%|█▉        | 20/104 [00:00<00:00, 321.98it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.weight]
+
+Loading weights:   9%|▊         | 9/104 [00:00<00:00, 200.40it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.bias][A[A
+Loading weights:  10%|▉         | 10/104 [00:00<00:00, 177.12it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.weight][A
+Loading weights:  10%|▉         | 10/104 [00:00<00:00, 176.69it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.weight][A
+
+Loading weights:   9%|▊         | 9/104 [00:00<00:00, 195.47it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.bias][A[ALoading weights:  19%|█▉        | 20/104 [00:00<00:00, 312.40it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.weight]
+Loading weights:  11%|█         | 11/104 [00:00<00:00, 190.64it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.bias]    [A
+Loading weights:  11%|█         | 11/104 [00:00<00:00, 190.22it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.bias][ALoading weights:  20%|██        | 21/104 [00:00<00:00, 324.63it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.bias]      Loading weights:  20%|██        | 21/104 [00:00<00:00, 323.70it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.bias]
+
+Loading weights:  10%|▉         | 10/104 [00:00<00:00, 207.22it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.weight][A[A
+
+Loading weights:  10%|▉         | 10/104 [00:00<00:00, 206.47it/s, Materializing param=distilbert.transformer.layer.0.attention.out_lin.weight][A[ALoading weights:  21%|██        | 22/104 [00:00<00:00, 330.52it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.weight]Loading weights:  21%|██        | 22/104 [00:00<00:00, 329.81it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.weight]
+
+Loading weights:  11%|█         | 11/104 [00:00<00:00, 222.71it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.bias]    [A[A
+
+Loading weights:  11%|█         | 11/104 [00:00<00:00, 222.06it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.bias][A[ALoading weights:  22%|██▏       | 23/104 [00:00<00:00, 340.54it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.bias]Loading weights:  22%|██▏       | 23/104 [00:00<00:00, 339.87it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.bias]
+
+Loading weights:  12%|█▏        | 12/104 [00:00<00:00, 237.82it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.weight][A[A
+
+Loading weights:  12%|█▏        | 12/104 [00:00<00:00, 236.63it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.weight][A[A
+Loading weights:  12%|█▏        | 12/104 [00:00<00:00, 192.98it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.weight][A
+Loading weights:  12%|█▏        | 12/104 [00:00<00:00, 192.45it/s, Materializing param=distilbert.transformer.layer.0.attention.q_lin.weight][A
+
+Loading weights:  12%|█▎        | 13/104 [00:00<00:00, 251.00it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.bias]  [A[A
+
+Loading weights:  12%|█▎        | 13/104 [00:00<00:00, 250.26it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.bias][A[A
+Loading weights:  12%|█▎        | 13/104 [00:00<00:00, 205.56it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.bias]  [A
+Loading weights:  12%|█▎        | 13/104 [00:00<00:00, 205.13it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.bias][A
+
+Loading weights:  13%|█▎        | 14/104 [00:00<00:00, 264.70it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.weight][A[A
+
+Loading weights:  13%|█▎        | 14/104 [00:00<00:00, 263.86it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.weight][A[A
+Loading weights:  13%|█▎        | 14/104 [00:00<00:00, 217.38it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.weight][A
+Loading weights:  13%|█▎        | 14/104 [00:00<00:00, 216.85it/s, Materializing param=distilbert.transformer.layer.0.attention.v_lin.weight][A
+
+Loading weights:  14%|█▍        | 15/104 [00:00<00:00, 277.88it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.bias]         [A[A
+
+Loading weights:  14%|█▍        | 15/104 [00:00<00:00, 276.75it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.bias][A[ALoading weights:  23%|██▎       | 24/104 [00:00<00:00, 331.47it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.weight]Loading weights:  23%|██▎       | 24/104 [00:00<00:00, 330.57it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.weight]
+
+Loading weights:  15%|█▌        | 16/104 [00:00<00:00, 287.11it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.weight][A[A
+
+Loading weights:  15%|█▌        | 16/104 [00:00<00:00, 286.21it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.weight][A[A
+Loading weights:  14%|█▍        | 15/104 [00:00<00:00, 222.99it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.bias]         [A
+Loading weights:  14%|█▍        | 15/104 [00:00<00:00, 222.53it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.bias][A
+
+Loading weights:  16%|█▋        | 17/104 [00:00<00:00, 298.32it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.bias]  [A[A
+
+Loading weights:  16%|█▋        | 17/104 [00:00<00:00, 297.61it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.bias][A[A
+Loading weights:  15%|█▌        | 16/104 [00:00<00:00, 234.05it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.weight][A
+Loading weights:  15%|█▌        | 16/104 [00:00<00:00, 233.46it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin1.weight][ALoading weights:  24%|██▍       | 25/104 [00:00<00:00, 330.13it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.bias]Loading weights:  24%|██▍       | 25/104 [00:00<00:00, 329.29it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.bias]
+Loading weights:  16%|█▋        | 17/104 [00:00<00:00, 243.34it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.bias]  [A
+Loading weights:  16%|█▋        | 17/104 [00:00<00:00, 242.58it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.bias][ALoading weights:  25%|██▌       | 26/104 [00:00<00:00, 336.02it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.weight]Loading weights:  25%|██▌       | 26/104 [00:00<00:00, 335.34it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.weight]
+
+Loading weights:  17%|█▋        | 18/104 [00:00<00:00, 298.75it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.weight][A[A
+
+Loading weights:  17%|█▋        | 18/104 [00:00<00:00, 297.94it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.weight][A[ALoading weights:  26%|██▌       | 27/104 [00:00<00:00, 343.96it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.bias]    Loading weights:  26%|██▌       | 27/104 [00:00<00:00, 343.31it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.bias]
+
+Loading weights:  18%|█▊        | 19/104 [00:00<00:00, 309.79it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.bias][A[A
+
+Loading weights:  18%|█▊        | 19/104 [00:00<00:00, 309.03it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.bias][A[ALoading weights:  27%|██▋       | 28/104 [00:00<00:00, 352.55it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.weight]Loading weights:  27%|██▋       | 28/104 [00:00<00:00, 351.92it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.weight]
+
+Loading weights:  19%|█▉        | 20/104 [00:00<00:00, 321.16it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.weight][A[A
+
+Loading weights:  19%|█▉        | 20/104 [00:00<00:00, 320.42it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.weight][A[ALoading weights:  28%|██▊       | 29/104 [00:00<00:00, 360.76it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.bias]  Loading weights:  28%|██▊       | 29/104 [00:00<00:00, 360.10it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.bias]
+
+Loading weights:  20%|██        | 21/104 [00:00<00:00, 331.65it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.bias]      [A[A
+
+Loading weights:  20%|██        | 21/104 [00:00<00:00, 330.84it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.bias][A[ALoading weights:  29%|██▉       | 30/104 [00:00<00:00, 368.54it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight]Loading weights:  29%|██▉       | 30/104 [00:00<00:00, 367.97it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight]
+
+Loading weights:  21%|██        | 22/104 [00:00<00:00, 342.51it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.weight][A[A
+
+Loading weights:  21%|██        | 22/104 [00:00<00:00, 341.35it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.weight][A[A
+Loading weights:  17%|█▋        | 18/104 [00:00<00:00, 237.09it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.weight][A
+Loading weights:  17%|█▋        | 18/104 [00:00<00:00, 236.44it/s, Materializing param=distilbert.transformer.layer.0.ffn.lin2.weight][ALoading weights:  30%|██▉       | 31/104 [00:00<00:00, 372.11it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.bias]         Loading weights:  30%|██▉       | 31/104 [00:00<00:00, 370.87it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.bias]
+Loading weights:  18%|█▊        | 19/104 [00:00<00:00, 246.15it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.bias][A
+Loading weights:  18%|█▊        | 19/104 [00:00<00:00, 245.74it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.bias][ALoading weights:  31%|███       | 32/104 [00:00<00:00, 379.48it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.weight]Loading weights:  31%|███       | 32/104 [00:00<00:00, 378.89it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.weight]
+Loading weights:  19%|█▉        | 20/104 [00:00<00:00, 256.35it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.weight][A
+Loading weights:  19%|█▉        | 20/104 [00:00<00:00, 255.87it/s, Materializing param=distilbert.transformer.layer.0.output_layer_norm.weight][ALoading weights:  32%|███▏      | 33/104 [00:00<00:00, 387.61it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.bias]  Loading weights:  32%|███▏      | 33/104 [00:00<00:00, 387.07it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.bias]
+Loading weights:  20%|██        | 21/104 [00:00<00:00, 266.30it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.bias]      [A
+Loading weights:  20%|██        | 21/104 [00:00<00:00, 265.88it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.bias][ALoading weights:  33%|███▎      | 34/104 [00:00<00:00, 395.63it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight]Loading weights:  33%|███▎      | 34/104 [00:00<00:00, 395.03it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight]
+Loading weights:  21%|██        | 22/104 [00:00<00:00, 276.02it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.weight][A
+Loading weights:  21%|██        | 22/104 [00:00<00:00, 275.57it/s, Materializing param=distilbert.transformer.layer.0.sa_layer_norm.weight][ALoading weights:  34%|███▎      | 35/104 [00:00<00:00, 403.15it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.bias]Loading weights:  34%|███▎      | 35/104 [00:00<00:00, 402.58it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.bias]
+Loading weights:  22%|██▏       | 23/104 [00:00<00:00, 285.38it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.bias][A
+Loading weights:  22%|██▏       | 23/104 [00:00<00:00, 284.90it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.bias][ALoading weights:  35%|███▍      | 36/104 [00:00<00:00, 410.47it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.weight]Loading weights:  35%|███▍      | 36/104 [00:00<00:00, 409.91it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.weight]
+Loading weights:  23%|██▎       | 24/104 [00:00<00:00, 294.82it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.weight][A
+Loading weights:  23%|██▎       | 24/104 [00:00<00:00, 294.37it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.weight][A
+
+Loading weights:  22%|██▏       | 23/104 [00:00<00:00, 324.01it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.bias][A[A
+
+Loading weights:  22%|██▏       | 23/104 [00:00<00:00, 323.38it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.bias][A[A
+Loading weights:  24%|██▍       | 25/104 [00:00<00:00, 303.55it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.bias][A
+Loading weights:  24%|██▍       | 25/104 [00:00<00:00, 302.80it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.bias][ALoading weights:  36%|███▌      | 37/104 [00:00<00:00, 412.16it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.bias]      Loading weights:  36%|███▌      | 37/104 [00:00<00:00, 410.84it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.bias]
+
+Loading weights:  23%|██▎       | 24/104 [00:00<00:00, 329.87it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.weight][A[A
+
+Loading weights:  23%|██▎       | 24/104 [00:00<00:00, 329.26it/s, Materializing param=distilbert.transformer.layer.1.attention.k_lin.weight][A[ALoading weights:  37%|███▋      | 38/104 [00:00<00:00, 418.27it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.weight]Loading weights:  37%|███▋      | 38/104 [00:00<00:00, 417.71it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.weight]
+
+Loading weights:  24%|██▍       | 25/104 [00:00<00:00, 339.23it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.bias][A[A
+
+Loading weights:  24%|██▍       | 25/104 [00:00<00:00, 338.67it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.bias][A[ALoading weights:  38%|███▊      | 39/104 [00:00<00:00, 424.93it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.bias]Loading weights:  38%|███▊      | 39/104 [00:00<00:00, 424.36it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.bias]
+Loading weights:  25%|██▌       | 26/104 [00:00<00:00, 303.27it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.weight][A
+Loading weights:  25%|██▌       | 26/104 [00:00<00:00, 302.57it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.weight][A
+
+Loading weights:  25%|██▌       | 26/104 [00:00<00:00, 344.98it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.weight][A[A
+
+Loading weights:  25%|██▌       | 26/104 [00:00<00:00, 343.34it/s, Materializing param=distilbert.transformer.layer.1.attention.out_lin.weight][A[ALoading weights:  38%|███▊      | 40/104 [00:00<00:00, 426.66it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight]Loading weights:  38%|███▊      | 40/104 [00:00<00:00, 426.12it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight]
+
+Loading weights:  26%|██▌       | 27/104 [00:00<00:00, 349.51it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.bias]    [A[A
+
+Loading weights:  26%|██▌       | 27/104 [00:00<00:00, 348.61it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.bias][A[A
+Loading weights:  26%|██▌       | 27/104 [00:00<00:00, 302.98it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.bias]    [A
+Loading weights:  26%|██▌       | 27/104 [00:00<00:00, 302.48it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.bias][ALoading weights:  39%|███▉      | 41/104 [00:00<00:00, 425.37it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.bias]Loading weights:  39%|███▉      | 41/104 [00:00<00:00, 424.68it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.bias]
+Loading weights:  27%|██▋       | 28/104 [00:00<00:00, 310.62it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.weight][A
+Loading weights:  27%|██▋       | 28/104 [00:00<00:00, 310.06it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.weight][ALoading weights:  40%|████      | 42/104 [00:00<00:00, 431.70it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.weight]Loading weights:  40%|████      | 42/104 [00:00<00:00, 431.12it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.weight]
+Loading weights:  28%|██▊       | 29/104 [00:00<00:00, 318.57it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.bias]  [A
+Loading weights:  28%|██▊       | 29/104 [00:00<00:00, 317.68it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.bias][A
+
+Loading weights:  27%|██▋       | 28/104 [00:00<00:00, 347.20it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.weight][A[A
+
+Loading weights:  27%|██▋       | 28/104 [00:00<00:00, 343.88it/s, Materializing param=distilbert.transformer.layer.1.attention.q_lin.weight][A[ALoading weights:  41%|████▏     | 43/104 [00:00<00:00, 432.47it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.bias]    Loading weights:  41%|████▏     | 43/104 [00:00<00:00, 431.89it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.bias]
+
+Loading weights:  28%|██▊       | 29/104 [00:00<00:00, 352.39it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.bias]  [A[A
+
+Loading weights:  28%|██▊       | 29/104 [00:00<00:00, 351.81it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.bias][A[ALoading weights:  42%|████▏     | 44/104 [00:00<00:00, 438.30it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight]Loading weights:  42%|████▏     | 44/104 [00:00<00:00, 437.79it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight]
+
+Loading weights:  29%|██▉       | 30/104 [00:00<00:00, 360.75it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight][A[A
+
+Loading weights:  29%|██▉       | 30/104 [00:00<00:00, 360.21it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight][A[ALoading weights:  43%|████▎     | 45/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight]Loading weights:  43%|████▎     | 45/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.bias]  Loading weights:  43%|████▎     | 45/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.bias]
+Loading weights:  29%|██▉       | 30/104 [00:00<00:00, 315.64it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight][A
+Loading weights:  29%|██▉       | 30/104 [00:00<00:00, 315.17it/s, Materializing param=distilbert.transformer.layer.1.attention.v_lin.weight][ALoading weights:  44%|████▍     | 46/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.weight]Loading weights:  44%|████▍     | 46/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.weight]
+Loading weights:  30%|██▉       | 31/104 [00:00<00:00, 322.73it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.bias]         [A
+Loading weights:  30%|██▉       | 31/104 [00:00<00:00, 322.30it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.bias][ALoading weights:  45%|████▌     | 47/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.bias]         Loading weights:  45%|████▌     | 47/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.bias]
+
+Loading weights:  30%|██▉       | 31/104 [00:00<00:00, 359.86it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.bias]         [A[A
+
+Loading weights:  30%|██▉       | 31/104 [00:00<00:00, 359.03it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.bias][A[A
+Loading weights:  31%|███       | 32/104 [00:00<00:00, 326.98it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.weight][A
+Loading weights:  31%|███       | 32/104 [00:00<00:00, 326.55it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.weight][A
+
+Loading weights:  31%|███       | 32/104 [00:00<00:00, 366.19it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.weight][A[A
+
+Loading weights:  31%|███       | 32/104 [00:00<00:00, 365.64it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin1.weight][A[A
+Loading weights:  32%|███▏      | 33/104 [00:00<00:00, 333.92it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.bias]  [A
+Loading weights:  32%|███▏      | 33/104 [00:00<00:00, 333.48it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.bias][A
+
+Loading weights:  32%|███▏      | 33/104 [00:00<00:00, 373.58it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.bias]  [A[A
+
+Loading weights:  32%|███▏      | 33/104 [00:00<00:00, 372.94it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.bias][A[A
+Loading weights:  33%|███▎      | 34/104 [00:00<00:00, 340.68it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight][A
+Loading weights:  33%|███▎      | 34/104 [00:00<00:00, 340.23it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight][A
+
+Loading weights:  33%|███▎      | 34/104 [00:00<00:00, 380.92it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight][A[A
+
+Loading weights:  33%|███▎      | 34/104 [00:00<00:00, 380.07it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight][A[ALoading weights:  46%|████▌     | 48/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.weight]Loading weights:  46%|████▌     | 48/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.weight]
+
+Loading weights:  34%|███▎      | 35/104 [00:00<00:00, 387.19it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.bias][A[A
+
+Loading weights:  34%|███▎      | 35/104 [00:00<00:00, 386.50it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.bias][A[ALoading weights:  47%|████▋     | 49/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.bias]  Loading weights:  47%|████▋     | 49/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.bias]
+
+Loading weights:  35%|███▍      | 36/104 [00:00<00:00, 393.75it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.weight][A[A
+
+Loading weights:  35%|███▍      | 36/104 [00:00<00:00, 393.17it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.weight][A[ALoading weights:  48%|████▊     | 50/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.weight]Loading weights:  48%|████▊     | 50/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.weight]
+
+Loading weights:  36%|███▌      | 37/104 [00:00<00:00, 400.65it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.bias]      [A[A
+
+Loading weights:  36%|███▌      | 37/104 [00:00<00:00, 400.06it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.bias][A[ALoading weights:  49%|████▉     | 51/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.bias]Loading weights:  49%|████▉     | 51/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.bias]
+
+Loading weights:  37%|███▋      | 38/104 [00:00<00:00, 406.93it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.weight][A[A
+
+Loading weights:  37%|███▋      | 38/104 [00:00<00:00, 406.37it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.weight][A[ALoading weights:  50%|█████     | 52/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.weight]Loading weights:  50%|█████     | 52/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.weight]
+
+Loading weights:  38%|███▊      | 39/104 [00:00<00:00, 412.19it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.bias][A[A
+Loading weights:  34%|███▎      | 35/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.ffn.lin2.weight][A
+Loading weights:  34%|███▎      | 35/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.bias][A
+Loading weights:  34%|███▎      | 35/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.bias][ALoading weights:  51%|█████     | 53/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.bias]      Loading weights:  51%|█████     | 53/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.bias]
+Loading weights:  35%|███▍      | 36/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.weight][A
+Loading weights:  35%|███▍      | 36/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.output_layer_norm.weight][ALoading weights:  52%|█████▏    | 54/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.weight]Loading weights:  52%|█████▏    | 54/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.weight]
+Loading weights:  36%|███▌      | 37/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.bias]      [A
+Loading weights:  36%|███▌      | 37/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.bias][ALoading weights:  53%|█████▎    | 55/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.bias]Loading weights:  53%|█████▎    | 55/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.bias]
+
+Loading weights:  38%|███▊      | 39/104 [00:00<00:00, 397.49it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.bias][A[ALoading weights:  54%|█████▍    | 56/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.weight]Loading weights:  54%|█████▍    | 56/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.weight]
+Loading weights:  37%|███▋      | 38/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.weight][A
+Loading weights:  37%|███▋      | 38/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.1.sa_layer_norm.weight][A
+
+Loading weights:  38%|███▊      | 40/104 [00:00<00:00, 400.71it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight][A[A
+
+Loading weights:  38%|███▊      | 40/104 [00:00<00:00, 400.18it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight][A[A
+Loading weights:  38%|███▊      | 39/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.bias][A
+Loading weights:  38%|███▊      | 39/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.bias][A
+
+Loading weights:  39%|███▉      | 41/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight][A[A
+
+Loading weights:  39%|███▉      | 41/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.bias][A[A
+
+Loading weights:  39%|███▉      | 41/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.bias][A[ALoading weights:  55%|█████▍    | 57/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.bias]Loading weights:  55%|█████▍    | 57/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.bias]
+
+Loading weights:  40%|████      | 42/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.weight][A[A
+
+Loading weights:  40%|████      | 42/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.weight][A[A
+Loading weights:  38%|███▊      | 40/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight][A
+Loading weights:  38%|███▊      | 40/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.k_lin.weight][A
+
+Loading weights:  41%|████▏     | 43/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.bias]    [A[A
+
+Loading weights:  41%|████▏     | 43/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.bias][A[A
+Loading weights:  39%|███▉      | 41/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.bias][A
+Loading weights:  39%|███▉      | 41/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.bias][A
+
+Loading weights:  42%|████▏     | 44/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight][A[A
+
+Loading weights:  42%|████▏     | 44/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight][A[ALoading weights:  56%|█████▌    | 58/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.weight]Loading weights:  56%|█████▌    | 58/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.weight]
+Loading weights:  40%|████      | 42/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.weight][A
+Loading weights:  40%|████      | 42/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.out_lin.weight][ALoading weights:  57%|█████▋    | 59/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.bias]    Loading weights:  57%|█████▋    | 59/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.bias]
+Loading weights:  41%|████▏     | 43/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.bias]    [A
+Loading weights:  41%|████▏     | 43/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.bias][ALoading weights:  58%|█████▊    | 60/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.weight]Loading weights:  58%|█████▊    | 60/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.weight]
+
+Loading weights:  43%|████▎     | 45/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.bias]  [A[A
+
+Loading weights:  43%|████▎     | 45/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.bias][A[ALoading weights:  59%|█████▊    | 61/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.bias]  Loading weights:  59%|█████▊    | 61/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.bias]
+
+Loading weights:  44%|████▍     | 46/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.weight][A[A
+
+Loading weights:  44%|████▍     | 46/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.weight][A[ALoading weights:  60%|█████▉    | 62/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight]Loading weights:  60%|█████▉    | 62/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight]
+
+Loading weights:  45%|████▌     | 47/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.bias]         [A[A
+
+Loading weights:  45%|████▌     | 47/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.bias][A[A
+Loading weights:  42%|████▏     | 44/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight][A
+Loading weights:  42%|████▏     | 44/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.q_lin.weight][ALoading weights:  61%|██████    | 63/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.bias]         Loading weights:  61%|██████    | 63/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.bias]
+Loading weights:  43%|████▎     | 45/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.bias]  [A
+Loading weights:  43%|████▎     | 45/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.bias][A
+
+Loading weights:  46%|████▌     | 48/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.weight][A[A
+
+Loading weights:  46%|████▌     | 48/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.weight][A[A
+Loading weights:  44%|████▍     | 46/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.weight][A
+Loading weights:  44%|████▍     | 46/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.attention.v_lin.weight][A
+
+Loading weights:  47%|████▋     | 49/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.bias]  [A[A
+
+Loading weights:  47%|████▋     | 49/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.bias][A[ALoading weights:  62%|██████▏   | 64/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.weight]Loading weights:  62%|██████▏   | 64/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.weight]
+Loading weights:  45%|████▌     | 47/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.bias]         [A
+
+Loading weights:  48%|████▊     | 50/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.weight][A[A
+
+Loading weights:  48%|████▊     | 50/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.weight][A[A
+Loading weights:  45%|████▌     | 47/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.bias][ALoading weights:  62%|██████▎   | 65/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.bias]  Loading weights:  62%|██████▎   | 65/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.bias]
+
+Loading weights:  49%|████▉     | 51/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.bias][A[A
+
+Loading weights:  49%|████▉     | 51/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.bias][A[ALoading weights:  63%|██████▎   | 66/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.weight]Loading weights:  63%|██████▎   | 66/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.weight]
+
+Loading weights:  50%|█████     | 52/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.weight][A[A
+
+Loading weights:  50%|█████     | 52/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.weight][A[ALoading weights:  64%|██████▍   | 67/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.bias]Loading weights:  64%|██████▍   | 67/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.bias]
+
+Loading weights:  51%|█████     | 53/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.bias]      [A[A
+
+Loading weights:  51%|█████     | 53/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.bias][A[ALoading weights:  65%|██████▌   | 68/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.weight]Loading weights:  65%|██████▌   | 68/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.weight]
+
+Loading weights:  52%|█████▏    | 54/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.weight][A[A
+
+Loading weights:  52%|█████▏    | 54/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.weight][A[A
+Loading weights:  46%|████▌     | 48/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.weight][A
+Loading weights:  46%|████▌     | 48/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin1.weight][A
+
+Loading weights:  53%|█████▎    | 55/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.bias][A[A
+
+Loading weights:  53%|█████▎    | 55/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.bias][A[ALoading weights:  66%|██████▋   | 69/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.bias]      Loading weights:  66%|██████▋   | 69/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.bias]
+Loading weights:  47%|████▋     | 49/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.bias]  [A
+Loading weights:  47%|████▋     | 49/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.bias][ALoading weights:  67%|██████▋   | 70/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.weight]Loading weights:  67%|██████▋   | 70/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.weight]
+Loading weights:  48%|████▊     | 50/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.weight][A
+Loading weights:  48%|████▊     | 50/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.ffn.lin2.weight][ALoading weights:  68%|██████▊   | 71/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.bias]Loading weights:  68%|██████▊   | 71/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.bias]
+
+Loading weights:  54%|█████▍    | 56/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.weight][A[A
+
+Loading weights:  54%|█████▍    | 56/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.weight][A[A
+Loading weights:  49%|████▉     | 51/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.bias][A
+Loading weights:  49%|████▉     | 51/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.bias][A
+
+Loading weights:  55%|█████▍    | 57/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.bias][A[A
+
+Loading weights:  55%|█████▍    | 57/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.bias][A[A
+Loading weights:  50%|█████     | 52/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.weight][A
+Loading weights:  50%|█████     | 52/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.output_layer_norm.weight][A
+
+Loading weights:  56%|█████▌    | 58/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.weight][A[A
+
+Loading weights:  56%|█████▌    | 58/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.weight][A[A
+Loading weights:  51%|█████     | 53/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.bias]      [A
+Loading weights:  51%|█████     | 53/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.bias][A
+
+Loading weights:  57%|█████▋    | 59/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.bias]    [A[A
+
+Loading weights:  57%|█████▋    | 59/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.bias][A[A
+Loading weights:  52%|█████▏    | 54/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.weight][A
+Loading weights:  52%|█████▏    | 54/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.2.sa_layer_norm.weight][A
+
+Loading weights:  58%|█████▊    | 60/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.weight][A[A
+
+Loading weights:  58%|█████▊    | 60/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.weight][A[ALoading weights:  69%|██████▉   | 72/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.weight]Loading weights:  69%|██████▉   | 72/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.weight]Loading weights:  70%|███████   | 73/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.bias]Loading weights:  70%|███████   | 73/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.bias]
+
+Loading weights:  59%|█████▊    | 61/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.bias]  [A[A
+
+Loading weights:  59%|█████▊    | 61/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.bias][A[A
+Loading weights:  53%|█████▎    | 55/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.bias][A
+Loading weights:  53%|█████▎    | 55/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.bias][A
+
+Loading weights:  60%|█████▉    | 62/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight][A[A
+
+Loading weights:  60%|█████▉    | 62/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight][A[A
+Loading weights:  54%|█████▍    | 56/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.weight][A
+Loading weights:  54%|█████▍    | 56/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.k_lin.weight][ALoading weights:  71%|███████   | 74/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.weight]Loading weights:  71%|███████   | 74/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.weight]
+
+Loading weights:  61%|██████    | 63/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.bias]         [A[A
+
+Loading weights:  61%|██████    | 63/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.bias][A[A
+Loading weights:  55%|█████▍    | 57/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.bias][A
+Loading weights:  55%|█████▍    | 57/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.bias][ALoading weights:  72%|███████▏  | 75/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.bias]    Loading weights:  72%|███████▏  | 75/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.bias]
+
+Loading weights:  62%|██████▏   | 64/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.weight][A[A
+
+Loading weights:  62%|██████▏   | 64/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.weight][A[A
+Loading weights:  56%|█████▌    | 58/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.weight][A
+Loading weights:  56%|█████▌    | 58/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.out_lin.weight][A
+
+Loading weights:  62%|██████▎   | 65/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.bias]  [A[A
+
+Loading weights:  62%|██████▎   | 65/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.bias][A[A
+Loading weights:  57%|█████▋    | 59/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.bias]    [A
+Loading weights:  57%|█████▋    | 59/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.bias][A
+
+Loading weights:  63%|██████▎   | 66/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.weight][A[A
+
+Loading weights:  63%|██████▎   | 66/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.weight][A[A
+Loading weights:  58%|█████▊    | 60/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.weight][A
+Loading weights:  58%|█████▊    | 60/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.q_lin.weight][A
+
+Loading weights:  64%|██████▍   | 67/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.bias][A[A
+
+Loading weights:  64%|██████▍   | 67/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.bias][A[A
+Loading weights:  59%|█████▊    | 61/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.bias]  [A
+Loading weights:  59%|█████▊    | 61/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.bias][A
+
+Loading weights:  65%|██████▌   | 68/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.weight][A[A
+
+Loading weights:  65%|██████▌   | 68/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.weight][A[ALoading weights:  73%|███████▎  | 76/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight]Loading weights:  73%|███████▎  | 76/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight]
+Loading weights:  60%|█████▉    | 62/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight][A
+Loading weights:  60%|█████▉    | 62/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.attention.v_lin.weight][ALoading weights:  74%|███████▍  | 77/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.bias]  Loading weights:  74%|███████▍  | 77/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.bias]
+
+Loading weights:  66%|██████▋   | 69/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.bias]      [A[A
+
+Loading weights:  66%|██████▋   | 69/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.bias][A[ALoading weights:  75%|███████▌  | 78/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.weight]Loading weights:  75%|███████▌  | 78/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.weight]
+
+Loading weights:  67%|██████▋   | 70/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.weight][A[A
+
+Loading weights:  67%|██████▋   | 70/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.weight][A[ALoading weights:  76%|███████▌  | 79/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.bias]         Loading weights:  76%|███████▌  | 79/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.bias]
+
+Loading weights:  68%|██████▊   | 71/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.bias][A[A
+
+Loading weights:  68%|██████▊   | 71/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.bias][A[ALoading weights:  77%|███████▋  | 80/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.weight]Loading weights:  77%|███████▋  | 80/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.weight]
+
+Loading weights:  69%|██████▉   | 72/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.weight][A[A
+
+Loading weights:  69%|██████▉   | 72/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.weight][A[ALoading weights:  78%|███████▊  | 81/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.bias]  Loading weights:  78%|███████▊  | 81/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.bias]
+
+Loading weights:  70%|███████   | 73/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.bias][A[A
+
+Loading weights:  70%|███████   | 73/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.bias][A[A
+Loading weights:  61%|██████    | 63/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.bias]         [A
+Loading weights:  61%|██████    | 63/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.bias][ALoading weights:  79%|███████▉  | 82/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.weight]Loading weights:  79%|███████▉  | 82/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.weight]
+
+Loading weights:  71%|███████   | 74/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.weight][A[A
+
+Loading weights:  71%|███████   | 74/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.weight][A[ALoading weights:  80%|███████▉  | 83/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.bias]Loading weights:  80%|███████▉  | 83/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.bias]
+
+Loading weights:  72%|███████▏  | 75/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.bias]    [A[A
+
+Loading weights:  72%|███████▏  | 75/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.bias][A[ALoading weights:  81%|████████  | 84/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.weight]Loading weights:  81%|████████  | 84/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.weight]
+Loading weights:  62%|██████▏   | 64/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.weight][A
+Loading weights:  62%|██████▏   | 64/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin1.weight][ALoading weights:  82%|████████▏ | 85/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.bias]      Loading weights:  82%|████████▏ | 85/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.bias]
+
+Loading weights:  73%|███████▎  | 76/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight][A[A
+
+Loading weights:  73%|███████▎  | 76/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight][A[A
+Loading weights:  62%|██████▎   | 65/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.bias]  [A
+Loading weights:  62%|██████▎   | 65/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.bias][ALoading weights:  83%|████████▎ | 86/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.weight]Loading weights:  83%|████████▎ | 86/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.weight]
+Loading weights:  63%|██████▎   | 66/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.weight][A
+Loading weights:  63%|██████▎   | 66/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.ffn.lin2.weight][ALoading weights:  84%|████████▎ | 87/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.bias]Loading weights:  84%|████████▎ | 87/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.bias]
+Loading weights:  64%|██████▍   | 67/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.bias][A
+Loading weights:  64%|██████▍   | 67/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.bias][A
+
+Loading weights:  74%|███████▍  | 77/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.bias]  [A[A
+
+Loading weights:  74%|███████▍  | 77/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.bias][A[A
+Loading weights:  65%|██████▌   | 68/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.weight][A
+Loading weights:  65%|██████▌   | 68/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.output_layer_norm.weight][A
+
+Loading weights:  75%|███████▌  | 78/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.weight][A[A
+
+Loading weights:  75%|███████▌  | 78/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.weight][A[A
+Loading weights:  66%|██████▋   | 69/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.bias]      [A
+Loading weights:  66%|██████▋   | 69/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.bias][A
+
+Loading weights:  76%|███████▌  | 79/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.bias]         [A[A
+
+Loading weights:  76%|███████▌  | 79/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.bias][A[A
+Loading weights:  67%|██████▋   | 70/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.weight][A
+Loading weights:  67%|██████▋   | 70/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.3.sa_layer_norm.weight][ALoading weights:  85%|████████▍ | 88/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.weight]Loading weights:  85%|████████▍ | 88/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.weight]
+
+Loading weights:  77%|███████▋  | 80/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.weight][A[A
+
+Loading weights:  77%|███████▋  | 80/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.weight][A[A
+Loading weights:  68%|██████▊   | 71/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.bias][A
+Loading weights:  68%|██████▊   | 71/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.bias][ALoading weights:  86%|████████▌ | 89/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.bias]Loading weights:  86%|████████▌ | 89/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.bias]
+Loading weights:  69%|██████▉   | 72/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.weight][A
+Loading weights:  69%|██████▉   | 72/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.k_lin.weight][A
+
+Loading weights:  78%|███████▊  | 81/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.bias]  [A[A
+
+Loading weights:  78%|███████▊  | 81/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.bias][A[ALoading weights:  87%|████████▋ | 90/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.weight]Loading weights:  87%|████████▋ | 90/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.weight]
+
+Loading weights:  79%|███████▉  | 82/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.weight][A[A
+
+Loading weights:  79%|███████▉  | 82/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.weight][A[A
+Loading weights:  70%|███████   | 73/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.bias][A
+Loading weights:  70%|███████   | 73/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.bias][ALoading weights:  88%|████████▊ | 91/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.bias]    Loading weights:  88%|████████▊ | 91/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.bias]
+
+Loading weights:  80%|███████▉  | 83/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.bias][A[A
+
+Loading weights:  80%|███████▉  | 83/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.bias][A[A
+Loading weights:  71%|███████   | 74/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.weight][A
+Loading weights:  71%|███████   | 74/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.out_lin.weight][ALoading weights:  88%|████████▊ | 92/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.weight]Loading weights:  88%|████████▊ | 92/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.weight]
+
+Loading weights:  81%|████████  | 84/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.weight][A[A
+
+Loading weights:  81%|████████  | 84/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.weight][A[ALoading weights:  89%|████████▉ | 93/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias]  Loading weights:  89%|████████▉ | 93/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias]
+
+Loading weights:  82%|████████▏ | 85/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.bias]      [A[A
+
+Loading weights:  82%|████████▏ | 85/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.bias][A[ALoading weights:  90%|█████████ | 94/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.weight]Loading weights:  90%|█████████ | 94/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.weight]
+
+Loading weights:  83%|████████▎ | 86/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.weight][A[A
+
+Loading weights:  83%|████████▎ | 86/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.weight][A[ALoading weights:  91%|█████████▏| 95/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias]         Loading weights:  91%|█████████▏| 95/104 [00:00<00:00, 446.66it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias]
+
+Loading weights:  84%|████████▎ | 87/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.bias][A[A
+
+Loading weights:  84%|████████▎ | 87/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.bias][A[ALoading weights:  92%|█████████▏| 96/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias]Loading weights:  92%|█████████▏| 96/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.weight]Loading weights:  92%|█████████▏| 96/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.weight]
+Loading weights:  72%|███████▏  | 75/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.bias]    [A
+Loading weights:  72%|███████▏  | 75/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.bias][A
+
+Loading weights:  85%|████████▍ | 88/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.weight][A[A
+
+Loading weights:  85%|████████▍ | 88/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.weight][A[ALoading weights:  93%|█████████▎| 97/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.bias]  Loading weights:  93%|█████████▎| 97/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.bias]
+
+Loading weights:  86%|████████▌ | 89/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.bias][A[A
+
+Loading weights:  86%|████████▌ | 89/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.bias][A[ALoading weights:  94%|█████████▍| 98/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.weight]Loading weights:  94%|█████████▍| 98/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.weight]
+
+Loading weights:  87%|████████▋ | 90/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.weight][A[A
+
+Loading weights:  87%|████████▋ | 90/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.weight][A[ALoading weights:  95%|█████████▌| 99/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.bias]Loading weights:  95%|█████████▌| 99/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.bias]
+Loading weights:  73%|███████▎  | 76/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight][A
+Loading weights:  73%|███████▎  | 76/104 [00:00<00:00, 347.87it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight][ALoading weights:  96%|█████████▌| 100/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.weight]Loading weights:  96%|█████████▌| 100/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.weight]
+
+Loading weights:  88%|████████▊ | 91/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.bias]    [A[A
+
+Loading weights:  88%|████████▊ | 91/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.bias][A[A
+
+Loading weights:  88%|████████▊ | 92/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.weight][A[A
+
+Loading weights:  88%|████████▊ | 92/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.weight][A[A
+Loading weights:  74%|███████▍  | 77/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.attention.q_lin.weight][A
+Loading weights:  74%|███████▍  | 77/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.bias]  [A
+Loading weights:  74%|███████▍  | 77/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.bias][ALoading weights:  97%|█████████▋| 101/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.bias]      Loading weights:  97%|█████████▋| 101/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.bias]
+Loading weights:  75%|███████▌  | 78/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.weight][A
+Loading weights:  75%|███████▌  | 78/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.attention.v_lin.weight][ALoading weights:  98%|█████████▊| 102/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.weight]Loading weights:  98%|█████████▊| 102/104 [00:00<00:00, 480.03it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.weight]
+Loading weights:  76%|███████▌  | 79/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.bias]         [A
+Loading weights:  76%|███████▌  | 79/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.bias][ALoading weights:  99%|█████████▉| 103/104 [00:00<00:00, 480.03it/s, Materializing param=pre_classifier.bias]                                Loading weights:  99%|█████████▉| 103/104 [00:00<00:00, 480.03it/s, Materializing param=pre_classifier.bias]
+Loading weights:  77%|███████▋  | 80/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.weight][A
+Loading weights:  77%|███████▋  | 80/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin1.weight][ALoading weights: 100%|██████████| 104/104 [00:00<00:00, 480.03it/s, Materializing param=pre_classifier.weight]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 480.03it/s, Materializing param=pre_classifier.weight]
+Loading weights:  78%|███████▊  | 81/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.bias]  [A
+Loading weights:  78%|███████▊  | 81/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.bias][ALoading weights: 100%|██████████| 104/104 [00:00<00:00, 465.97it/s, Materializing param=pre_classifier.weight]
+
+Loading weights:  79%|███████▉  | 82/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.weight][A
+Loading weights:  79%|███████▉  | 82/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.ffn.lin2.weight][A
+
+Loading weights:  89%|████████▉ | 93/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias]  [A[A
+
+Loading weights:  89%|████████▉ | 93/104 [00:00<00:00, 409.14it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias][A[A
+Loading weights:  80%|███████▉  | 83/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.bias][A
+Loading weights:  80%|███████▉  | 83/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.bias][A
+Loading weights:  81%|████████  | 84/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.weight][A
+Loading weights:  81%|████████  | 84/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.output_layer_norm.weight][A
+
+Loading weights:  90%|█████████ | 94/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias][A[A
+
+Loading weights:  90%|█████████ | 94/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.weight][A[A
+
+Loading weights:  90%|█████████ | 94/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.weight][A[A
+Loading weights:  82%|████████▏ | 85/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.bias]      [A
+Loading weights:  82%|████████▏ | 85/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.bias][A
+
+Loading weights:  91%|█████████▏| 95/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias]         [A[A
+
+Loading weights:  91%|█████████▏| 95/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias][A[A
+Loading weights:  83%|████████▎ | 86/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.weight][A
+Loading weights:  83%|████████▎ | 86/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.4.sa_layer_norm.weight][A
+
+Loading weights:  92%|█████████▏| 96/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.weight][A[A
+
+Loading weights:  92%|█████████▏| 96/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.weight][A[A
+Loading weights:  84%|████████▎ | 87/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.bias][A
+Loading weights:  84%|████████▎ | 87/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.bias][A
+
+Loading weights:  93%|█████████▎| 97/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.bias]  [A[A
+
+Loading weights:  93%|█████████▎| 97/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.bias][A[A
+Loading weights:  85%|████████▍ | 88/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.weight][A
+Loading weights:  85%|████████▍ | 88/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.k_lin.weight][A
+
+Loading weights:  94%|█████████▍| 98/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.weight][A[A
+
+Loading weights:  94%|█████████▍| 98/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.weight][A[A
+Loading weights:  86%|████████▌ | 89/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.bias][A
+Loading weights:  86%|████████▌ | 89/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.bias][A
+
+Loading weights:  95%|█████████▌| 99/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.bias][A[A
+
+Loading weights:  95%|█████████▌| 99/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.bias][A[A
+Loading weights:  87%|████████▋ | 90/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.weight][A
+Loading weights:  87%|████████▋ | 90/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.out_lin.weight][A
+
+Loading weights:  96%|█████████▌| 100/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.weight][A[A
+
+Loading weights:  96%|█████████▌| 100/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.weight][A[A
+Loading weights:  88%|████████▊ | 91/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.bias]    [A
+Loading weights:  88%|████████▊ | 91/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.bias][A
+
+Loading weights:  97%|█████████▋| 101/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.bias]      [A[A
+
+Loading weights:  97%|█████████▋| 101/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.bias][A[A
+Loading weights:  88%|████████▊ | 92/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.weight][A
+Loading weights:  88%|████████▊ | 92/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.q_lin.weight][A
+Loading weights:  89%|████████▉ | 93/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias]  [A
+Loading weights:  89%|████████▉ | 93/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.bias][A
+
+Loading weights:  98%|█████████▊| 102/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.weight][A[A
+
+Loading weights:  98%|█████████▊| 102/104 [00:00<00:00, 446.27it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.weight][A[A
+Loading weights:  90%|█████████ | 94/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.weight][A
+Loading weights:  90%|█████████ | 94/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.attention.v_lin.weight][A
+
+Loading weights:  99%|█████████▉| 103/104 [00:00<00:00, 446.27it/s, Materializing param=pre_classifier.bias]                                [A[A
+
+Loading weights:  99%|█████████▉| 103/104 [00:00<00:00, 446.27it/s, Materializing param=pre_classifier.bias][A[A
+Loading weights:  91%|█████████▏| 95/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias]         [A
+Loading weights:  91%|█████████▏| 95/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.bias][A
+Loading weights:  92%|█████████▏| 96/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.weight][A
+Loading weights:  92%|█████████▏| 96/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin1.weight][A
+
+Loading weights: 100%|██████████| 104/104 [00:00<00:00, 446.27it/s, Materializing param=pre_classifier.weight][A[A
+
+Loading weights: 100%|██████████| 104/104 [00:00<00:00, 446.27it/s, Materializing param=pre_classifier.weight][A[A
+Loading weights:  93%|█████████▎| 97/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.bias]  [A
+Loading weights:  93%|█████████▎| 97/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.bias][ALoading weights: 100%|██████████| 104/104 [00:00<00:00, 403.86it/s, Materializing param=pre_classifier.weight]
+
+Loading weights:  94%|█████████▍| 98/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.weight][A
+Loading weights:  94%|█████████▍| 98/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.ffn.lin2.weight][A
+Loading weights:  95%|█████████▌| 99/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.bias][A
+Loading weights:  95%|█████████▌| 99/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.bias][A
+Loading weights:  96%|█████████▌| 100/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.weight][A
+Loading weights:  96%|█████████▌| 100/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.output_layer_norm.weight][A
+Loading weights:  97%|█████████▋| 101/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.bias]      [A
+Loading weights:  97%|█████████▋| 101/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.bias][A
+Loading weights:  98%|█████████▊| 102/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.weight][A
+Loading weights:  98%|█████████▊| 102/104 [00:00<00:00, 378.22it/s, Materializing param=distilbert.transformer.layer.5.sa_layer_norm.weight][A
+Loading weights:  99%|█████████▉| 103/104 [00:00<00:00, 378.22it/s, Materializing param=pre_classifier.bias]                                [A
+Loading weights:  99%|█████████▉| 103/104 [00:00<00:00, 378.22it/s, Materializing param=pre_classifier.bias][A
+Loading weights: 100%|██████████| 104/104 [00:00<00:00, 378.22it/s, Materializing param=pre_classifier.weight][A
+Loading weights: 100%|██████████| 104/104 [00:00<00:00, 378.22it/s, Materializing param=pre_classifier.weight][ALoading weights: 100%|██████████| 104/104 [00:00<00:00, 370.23it/s, Materializing param=pre_classifier.weight]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+    [HF] Model ready.
+    [HF] Model ready.
+    [HF] Model ready.
+    [HF] Model ready.
+    Total discovered pairs:   32
+    Cross-platform pairs:     18
+    Same-outcome pairs:       24
+    Sample pairs:
+      [crypto] k1(kalshi) ↔ k3(kalshi)  same=False  conf=0.94
+      [crypto] k1(kalshi) ↔ p1(polymarket)  same=True  conf=0.98
+      [crypto] k3(kalshi) ↔ p1(polymarket)  same=True  conf=0.97
+
+[5] Evaluating relationship accuracy vs ground-truth outcomes ...
+    Evaluable pairs:    32 / 32
+    Overall accuracy:   62.5%
+    Cluster accuracy:   66.5%
+    Confusion:          {'TP': 14, 'FP': 10, 'TN': 6, 'FN': 2}
+    By category:
+      crypto          62.5%
+
+[6] Running arbitrage backtest over 30 days ...
+    Entry threshold: 4%  |  Transaction cost: 2%
+
+─────────────────────────────────────────────────────────────────
+  BACKTEST RESULTS
+─────────────────────────────────────────────────────────────────
+  Trades executed:        38
+  Profitable trades:      28  (73.7%)
+  Pair match rate:        23/38  (60.5%)
+  Mean entry spread:      8.92%
+  Mean gross P&L/trade:   -0.0424
+  Mean net P&L/trade:     -0.0624
+  Total net P&L:          -2.3717
+  Sharpe ratio:           -0.102
+─────────────────────────────────────────────────────────────────
+
+  Top 5 trades by net P&L:
+    k3<>p5                spread=0.152  net_pnl=+1.1320  [YES/NO]  ✓
+    p8<>p6                spread=0.106  net_pnl=+1.0859  [YES/NO]  ✓
+    p1<>p5                spread=0.101  net_pnl=+1.0811  [YES/NO]  ✓
+    p12<>k15              spread=0.079  net_pnl=+1.0590  [YES/NO]  ✓
+    k12<>k15              spread=0.045  net_pnl=+1.0250  [YES/NO]  ✓
+
+  Worst 3 trades:
+    p5<>p3                spread=0.070  net_pnl=-0.9497  [NO/YES]  ✗
+    p2<>k4                spread=0.081  net_pnl=-0.9395  [NO/YES]  ✗
+    k2<>p1                spread=0.083  net_pnl=-0.9371  [NO/YES]  ✗
+
+[OK] Backtest complete.
+
+Results saved to /workspace/backtest_results_hf.json
