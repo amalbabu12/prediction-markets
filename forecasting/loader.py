@@ -27,6 +27,7 @@ def load_markets(
     resolved_only: bool = False,
     max_markets: Optional[int] = None,
     pm_session_factory: Optional[sessionmaker] = None,
+    active_only: bool = False,
 ) -> pd.DataFrame:
     """
     Load all markets (or only resolved ones) into a unified DataFrame.
@@ -48,7 +49,10 @@ def load_markets(
 
     with session_factory() as session:
         if "kalshi" in platforms:
-            markets = session.query(KalshiMarket).all()
+            q = session.query(KalshiMarket)
+            if active_only:
+                q = q.filter(KalshiMarket.status == "active")
+            markets = q.all()
             for m in markets:
                 question = m.title or ""
                 if m.subtitle:
@@ -77,7 +81,10 @@ def load_markets(
 
     with pm_sf() as session:
         if "polymarket" in platforms:
-            markets = session.query(PolymarketMarket).all()
+            q = session.query(PolymarketMarket)
+            if active_only:
+                q = q.filter(PolymarketMarket.closed == False)  # noqa: E712
+            markets = q.all()
             for m in markets:
                 question = (m.question or "").strip()
                 if not question:

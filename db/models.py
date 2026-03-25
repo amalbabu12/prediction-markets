@@ -302,6 +302,42 @@ class PolymarketPriceHistory(Base):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Arbitrage pairs
+# ══════════════════════════════════════════════════════════════════════════════
+
+class ArbitragePair(Base):
+    """
+    A cross-platform market pair identified as an arbitrage opportunity.
+
+    Prices are YES prices as decimal probabilities [0, 1].
+    Spread = abs(price_a - price_b).
+    """
+    __tablename__ = "arbitrage_pairs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    # Market A
+    id_a = Column(String, index=True, nullable=False)
+    platform_a = Column(String, nullable=False)
+    question_a = Column(Text)
+    price_a = Column(Float)
+    # Market B
+    id_b = Column(String, index=True, nullable=False)
+    platform_b = Column(String, nullable=False)
+    question_b = Column(Text)
+    price_b = Column(Float)
+    # Analysis
+    spread = Column(Float, index=True)
+    confidence_score = Column(Float)
+    category = Column(String)
+    rationale = Column(Text)
+    detected_at = Column(DateTime, default=_now, index=True)
+
+    __table_args__ = (
+        UniqueConstraint("id_a", "id_b", name="uq_arbitrage_pair"),
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Engine / session factory
 # ══════════════════════════════════════════════════════════════════════════════
 

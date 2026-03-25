@@ -1,0 +1,25 @@
+FROM nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y python3.11 python3.11-dev python3-pip && \
+    ln -s /usr/bin/python3.11 /usr/bin/python && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install PyTorch with CUDA 12.1 first (before other deps, so pip resolves correctly)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cu121
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN mkdir -p /data
+
+ENV DB_PATH=/data/markets.db \
+    KALSHI_RATE_LIMIT=10 \
+    POLYMARKET_RATE_LIMIT=30 \
+    EMBEDDER_DEVICE=cuda
+
+CMD ["python", "main.py", "snapshot"]

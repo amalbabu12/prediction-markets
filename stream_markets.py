@@ -170,17 +170,22 @@ def poll_kalshi(
     SessionFactory=None,
     lookback: int = 300,
     on_new_market=None,
+    seed_first_pass: bool = False,
 ) -> None:
     """
     Poll Kalshi for open markets created in the last `lookback` seconds.
 
-    No seed pass — starts immediately watching for new markets.
     Uses min_created_ts on every poll so only recently-created markets
     are fetched. The seen-set deduplicates markets that span poll boundaries.
 
     If SessionFactory is provided, every market found is upserted.
+
+    If seed_first_pass=True, the first poll silently fills the seen-set and
+    upserts to the DB without firing on_new_market. This prevents a burst of
+    LLM calls on startup for markets that pre-date the process launch.
     """
     seen: set[str] = set()
+    is_seed = seed_first_pass
 
     while time.monotonic() < deadline:
         try:
@@ -198,16 +203,19 @@ def poll_kalshi(
 
                 if ticker not in seen:
                     seen.add(ticker)
-                    print_kalshi(market)
-                    if on_new_market is not None:
-                        on_new_market(market)
+                    if not is_seed:
+                        print_kalshi(market)
+                        if on_new_market is not None:
+                            on_new_market(market)
 
             if SessionFactory:
-                print(f"[{_ts()}] KALSHI  upserted {batch_count} markets", flush=True)
+                label = "seed" if is_seed else "poll"
+                print(f"[{_ts()}] KALSHI  {label} upserted {batch_count} markets", flush=True)
 
         except Exception as exc:
             print(f"[{_ts()}] KALSHI  poll error: {exc}", file=sys.stderr)
 
+        is_seed = False  # only the first iteration is a seed pass
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             break
@@ -223,17 +231,22 @@ def poll_polymarket(
     SessionFactory=None,
     lookback: int = 300,
     on_new_market=None,
+    seed_first_pass: bool = False,
 ) -> None:
     """
     Poll Polymarket for active markets created in the last `lookback` seconds.
 
-    No seed pass — starts immediately watching for new markets.
     Uses start_date_min on every poll so only recently-created markets
     are fetched. The seen-set deduplicates markets that span poll boundaries.
 
     If SessionFactory is provided, every market found is upserted.
+
+    If seed_first_pass=True, the first poll silently fills the seen-set and
+    upserts to the DB without firing on_new_market. This prevents a burst of
+    LLM calls on startup for markets that pre-date the process launch.
     """
     seen: set[str] = set()
+    is_seed = seed_first_pass
 
     while time.monotonic() < deadline:
         try:
@@ -256,7 +269,8 @@ def poll_polymarket(
 
                 if cid not in seen:
                     seen.add(cid)
-                    new_markets.append(market)
+                    if not is_seed:
+                        new_markets.append(market)
 
             for market in reversed(new_markets):
                 print_polymarket(market)
@@ -264,11 +278,13 @@ def poll_polymarket(
                     on_new_market(market)
 
             if SessionFactory:
-                print(f"[{_ts()}] POLY    upserted {batch_count} markets", flush=True)
+                label = "seed" if is_seed else "poll"
+                print(f"[{_ts()}] POLY    {label} upserted {batch_count} markets", flush=True)
 
         except Exception as exc:
             print(f"[{_ts()}] POLY    poll error: {exc}", file=sys.stderr)
 
+        is_seed = False  # only the first iteration is a seed pass
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             break

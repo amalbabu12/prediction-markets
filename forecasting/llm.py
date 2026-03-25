@@ -92,13 +92,13 @@ class OpenAICompatibleBackend(LLMBackend):
         rpm_limit: int = 0,
         **extra_kwargs: Any,
     ) -> None:
+        import threading as _threading
         from openai import AsyncOpenAI
-        import asyncio as _asyncio
 
         self.model = model
         self._temperature = temperature
         self._extra_kwargs = extra_kwargs
-        self._rpm_lock = _asyncio.Lock() if rpm_limit > 0 else None
+        self._rpm_lock = _threading.Lock() if rpm_limit > 0 else None
         self._rpm_interval = (60.0 / rpm_limit) if rpm_limit > 0 else 0.0
         self._last_call_time: float = 0.0
         # max_retries=0: disable openai's built-in retry loop so our token-bucket
@@ -126,14 +126,14 @@ class OpenAICompatibleBackend(LLMBackend):
         messages.append({"role": "user", "content": user_prompt})
 
         for attempt in range(_retries):
-            # Token bucket — enforced on every attempt including retries
+            # Token bucket — threading.Lock works across event loops / threads
             if self._rpm_lock is not None:
-                async with self._rpm_lock:
+                with self._rpm_lock:
                     elapsed = _time.monotonic() - self._last_call_time
                     wait = self._rpm_interval - elapsed
-                    if wait > 0:
-                        await _asyncio.sleep(wait)
                     self._last_call_time = _time.monotonic()
+                if wait > 0:
+                    await _asyncio.sleep(wait)
 
             try:
                 response = await self._client.chat.completions.create(
@@ -195,14 +195,14 @@ class HuggingFaceBackend(LLMBackend):
         rpm_limit: int = 0,
         **extra_kwargs: Any,
     ) -> None:
+        import threading as _threading
         from huggingface_hub import AsyncInferenceClient
-        import asyncio as _asyncio
 
         self.model = model
         self._temperature = temperature
         self._extra_kwargs = extra_kwargs
-        # Shared token-bucket rate limiter across all coroutines
-        self._rpm_lock = _asyncio.Lock() if rpm_limit > 0 else None
+        # Shared token-bucket rate limiter across threads/event loops
+        self._rpm_lock = _threading.Lock() if rpm_limit > 0 else None
         self._rpm_interval = (60.0 / rpm_limit) if rpm_limit > 0 else 0.0
         self._last_call_time: float = 0.0
         # AsyncInferenceClient doesn't accept both model + base_url.
@@ -239,12 +239,12 @@ class HuggingFaceBackend(LLMBackend):
             # (including retries) so the next group never fires immediately
             # after a long retry delay.
             if self._rpm_lock is not None:
-                async with self._rpm_lock:
+                with self._rpm_lock:
                     elapsed = _time.monotonic() - self._last_call_time
                     wait = self._rpm_interval - elapsed
-                    if wait > 0:
-                        await _asyncio.sleep(wait)
                     self._last_call_time = _time.monotonic()
+                if wait > 0:
+                    await _asyncio.sleep(wait)
 
             try:
                 response = await self._client.chat_completion(

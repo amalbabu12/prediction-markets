@@ -11,3 +11,5 @@ sentence-transformers>=3.0.0
 scikit-learn>=1.4.0
 numpy>=1.26.0
 pandas>=2.0.0
+faiss-cpu>=1.7.4  # used on CPU; override with faiss-gpu in GPU builds
+openai>=1.0.0

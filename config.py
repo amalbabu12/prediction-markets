@@ -26,3 +26,6 @@ DB_PATH: str = os.getenv("DB_PATH", "./data/markets.db")
 KALSHI_RATE_LIMIT: float = float(os.getenv("KALSHI_RATE_LIMIT", "10"))
 POLYMARKET_RATE_LIMIT: float = float(os.getenv("POLYMARKET_RATE_LIMIT", "30"))
 
+GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY") or None
+LLM_MODEL: str = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
+

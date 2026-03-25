@@ -52,6 +52,35 @@ services:
     restart: unless-stopped
     profiles: ["continuous"]  # docker compose --profile continuous up
 
+  # Streaming arbitrage detector — polls every 5 min, writes hits to arbitrage_pairs table
+  arbitrage:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    volumes:
+      - ./data:/data
+      - hf-cache:/root/.cache/huggingface
+    env_file:
+      - .env
+    environment:
+      - DB_PATH=/data/markets.db
+      - EMBEDDER_DEVICE=cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: >
+      python detect_arbitrage.py
+        --db /data/markets.db
+        --interval 300
+        --lookback 360
+        --k 10
+        --spread 0.04
+    restart: unless-stopped
+
 volumes:
   claude-home:   # Named volume so ~/.claude persists between container runs
   hf-cache:      # Named volume so HuggingFace models persist between runs
