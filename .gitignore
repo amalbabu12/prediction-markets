@@ -5,3 +5,9 @@ __pycache__/
 data/
 *.db
 *.sqlite
+*.txt.bak
+backtest_output*.txt
+backtest_results*.json
+.pr_summary.md
+BACKTEST_REPORT.md
+.claude/settings.local.json
