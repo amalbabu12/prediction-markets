@@ -145,6 +145,9 @@ class StreamingDetector:
         self._k = k
         self._min_confidence = min_confidence
         self._lock = threading.Lock()
+        # Serialise LLM calls across all poller threads — prevents both threads
+        # from firing simultaneously and blowing the shared Groq TPM limit.
+        self._llm_sem = threading.Semaphore(1)
         self._index = None
         self._meta: list[dict] = []
         self._model = None
@@ -211,45 +214,46 @@ class StreamingDetector:
         if len(group) < 2:
             return
 
-        # LLM call outside the lock — it's slow
-        # Use thread-local backend to avoid sharing httpx.AsyncClient across threads
+        # LLM call outside the index lock — serialised via semaphore so both
+        # poller threads never hit Groq simultaneously (shared TPM budget).
         group_df = pd.DataFrame(group)
-        try:
-            category, raw_pairs = asyncio.run(
-                _discover_pairs_in_group(self._get_backend(), group_df)
-            )
-        except Exception as exc:
-            logging.getLogger(__name__).warning("LLM call failed: %s", exc)
-            return
+        with self._llm_sem:
+            try:
+                category, raw_pairs = asyncio.run(
+                    _discover_pairs_in_group(self._get_backend(), group_df)
+                )
+            except Exception as exc:
+                logging.getLogger(__name__).warning("LLM call failed: %s", exc)
+                return
 
-        q_to_row = {r["question"]: r for r in group}
+            q_to_row = {r["question"]: r for r in group}
 
-        for pair in raw_pairs:
-            if not pair.get("is_same_outcome"):
-                continue
-            conf = float(pair.get("confidence_score", 0))
-            if conf < self._min_confidence:
-                continue
+            for pair in raw_pairs:
+                if not pair.get("is_same_outcome"):
+                    continue
+                conf = float(pair.get("confidence_score", 0))
+                if conf < self._min_confidence:
+                    continue
 
-            row_a = q_to_row.get(pair.get("question_a", ""))
-            row_b = q_to_row.get(pair.get("question_b", ""))
-            if row_a is None or row_b is None:
-                continue
-            if row_a["platform"] == row_b["platform"]:
-                continue  # same platform — not actionable
+                row_a = q_to_row.get(pair.get("question_a", ""))
+                row_b = q_to_row.get(pair.get("question_b", ""))
+                if row_a is None or row_b is None:
+                    continue
+                if row_a["platform"] == row_b["platform"]:
+                    continue  # same platform — not actionable
 
-            price_a = row_a.get("price_yes")
-            price_b = row_b.get("price_yes")
-            if price_a is None or price_b is None:
-                continue
+                price_a = row_a.get("price_yes")
+                price_b = row_b.get("price_yes")
+                if price_a is None or price_b is None:
+                    continue
 
-            spread = abs(price_a - price_b)
-            if spread < self._spread_threshold:
-                continue
+                spread = abs(price_a - price_b)
+                if spread < self._spread_threshold:
+                    continue
 
-            _upsert_pair(self._sf, row_a, row_b, spread, conf,
-                         category, pair.get("rationale", ""))
-            _print_opportunity(row_a, row_b, spread, conf)
+                _upsert_pair(self._sf, row_a, row_b, spread, conf,
+                             category, pair.get("rationale", ""))
+                _print_opportunity(row_a, row_b, spread, conf)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
