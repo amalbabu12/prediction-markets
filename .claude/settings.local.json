@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd /c/Users/amalb/PersonalProjects/PredictionMarkets && docker compose run --rm collector 2>&1)"
+      "Bash(cd /c/Users/amalb/PersonalProjects/PredictionMarkets && docker compose run --rm collector 2>&1)",
+      "Bash(grep -E \"\\\\.\\(py|json|csv|txt|md|yml|yaml|toml\\)$\")",
+      "Bash(python:*)",
+      "Bash(docker compose:*)"
     ]
   }
 }

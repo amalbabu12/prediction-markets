@@ -24,6 +24,7 @@ def embed_questions(
     df: pd.DataFrame,
     cache_dir: Path = _CACHE_DIR,
     model_name: str = _MODEL_NAME,
+    model=None,  # optional pre-loaded SentenceTransformer
 ) -> np.ndarray:
     """
     Compute (or load cached) L2-normalized sentence embeddings for each row in df.
@@ -32,11 +33,21 @@ def embed_questions(
         df: DataFrame with a 'question' column; order must be stable
         cache_dir: Directory to cache .npy embedding arrays
         model_name: sentence-transformers model name
+        model: optional pre-loaded SentenceTransformer instance; if provided,
+               skips the cache entirely and encodes directly
 
     Returns:
         np.ndarray of shape (N, D) — one row per market, L2-normalized
     """
     from sentence_transformers import SentenceTransformer
+
+    if model is not None:
+        return model.encode(
+            df["question"].tolist(),
+            batch_size=256,
+            show_progress_bar=True,
+            normalize_embeddings=True,
+        )
 
     cache_dir.mkdir(parents=True, exist_ok=True)
 

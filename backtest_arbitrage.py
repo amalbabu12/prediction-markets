@@ -26,7 +26,7 @@ Run
 ---
     python backtest_arbitrage.py [--mock]
 
-    Without --mock: uses HuggingFace typeform/distilbert-base-uncased-mnli
+    Without --mock: uses HuggingFace cross-encoder/nli-deberta-v3-large
                     for real NLI-based pair classification.
     With --mock:    uses the deterministic MockLLMBackend (fast, no model download).
 
@@ -135,11 +135,12 @@ class HuggingFaceNLIBackend(LLMBackend):
     """
     Pair-classification backend using a real HuggingFace NLI model.
 
-    Model: typeform/distilbert-base-uncased-mnli  (66 M params, ~264 MB)
-    ─────────────────────────────────────────────────────────────────────
-    A DistilBERT model fine-tuned on Multi-Genre NLI, available freely on
-    the HuggingFace Hub.  It outputs ENTAILMENT / NEUTRAL / CONTRADICTION
-    probabilities for a (premise, hypothesis) pair.
+    Model: cross-encoder/nli-deberta-v3-large  (434 M params, ~900 MB)
+    ────────────────────────────────────────────────────────────────────
+    A DeBERTa-v3-large model fine-tuned on NLI, available freely on the
+    HuggingFace Hub.  It outputs ENTAILMENT / NEUTRAL / CONTRADICTION
+    probabilities for a (premise, hypothesis) pair.  Significantly stronger
+    than DistilBERT-based models at semantic entailment discrimination.
 
     Pair classification strategy
     ────────────────────────────
@@ -162,7 +163,7 @@ class HuggingFaceNLIBackend(LLMBackend):
         device:                  'cpu' or 'cuda'.  Defaults to 'cpu' for portability.
     """
 
-    _MODEL_ID = "typeform/distilbert-base-uncased-mnli"
+    _MODEL_ID = "cross-encoder/nli-deberta-v3-large"
 
     def __init__(
         self,

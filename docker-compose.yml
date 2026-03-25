@@ -21,6 +21,7 @@ services:
     build: .
     volumes:
       - ./data:/data          # SQLite DB persists here on the host
+      - hf-cache:/root/.cache/huggingface  # Cache downloaded models between runs
     env_file:
       - .env                  # KALSHI_API_KEY_ID, KALSHI_PRIVATE_KEY_PATH, etc.
     environment:
@@ -53,3 +54,4 @@ services:
 
 volumes:
   claude-home:   # Named volume so ~/.claude persists between container runs
+  hf-cache:      # Named volume so HuggingFace models persist between runs

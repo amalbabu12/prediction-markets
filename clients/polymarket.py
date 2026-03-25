@@ -226,6 +226,7 @@ class PolymarketGammaClient(_BaseClient):
         order: str = "volume",
         ascending: bool = False,
         limit: int = 100,
+        start_date_min: Optional[str] = None,
     ) -> Iterator[dict]:
         """
         Paginate through all Gamma markets.
@@ -235,6 +236,10 @@ class PolymarketGammaClient(_BaseClient):
         outcomes, clobTokenIds, groupItemTitle, groupItemThreshold.
 
         Note: conditionId links to the CLOB API; clobTokenIds are the Yes/No token IDs.
+
+        Args:
+            start_date_min: ISO 8601 datetime string — only return markets whose
+                            startDate is >= this value. Useful for delta polling.
         """
         offset = 0
         page = 0
@@ -253,6 +258,8 @@ class PolymarketGammaClient(_BaseClient):
                 params["archived"] = str(archived).lower()
             if tag_id:
                 params["tag_id"] = tag_id
+            if start_date_min:
+                params["start_date_min"] = start_date_min
 
             data = self._get("/markets", params)
             markets: list[dict] = data if isinstance(data, list) else data.get("markets", [])

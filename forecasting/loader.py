@@ -72,6 +72,7 @@ def load_markets(
                     "question": question,
                     "outcome": outcome,
                     "resolved_at": m.settle_time,
+                    "price_yes": (m.yes_ask / 100.0) if m.yes_ask is not None else None,
                 })
 
     with pm_sf() as session:
@@ -98,6 +99,7 @@ def load_markets(
                     "question": question,
                     "outcome": outcome,
                     "resolved_at": m.end_date,
+                    "price_yes": m.price_yes,
                 })
 
     df = pd.DataFrame(rows)
