@@ -24,7 +24,9 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import math
 import os
+import queue
 import threading
 import time
 from typing import Optional
@@ -46,7 +48,10 @@ logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(mes
 
 ENTRY_SPREAD_THRESHOLD = 0.04
 K_NEIGHBORS = 10
-MIN_CONFIDENCE = 0.5
+MIN_CONFIDENCE = 0.8
+# Minimum cosine similarity for a cross-platform neighbor to trigger an LLM call.
+# IndexFlatIP on L2-normalised vectors returns dot product = cosine similarity.
+MIN_CROSS_PLATFORM_SIM = 0.55
 
 
 # ── Price / question / id extraction from raw API dicts ──────────────────────
@@ -57,7 +62,8 @@ def _get_price(market: dict, platform: str) -> Optional[float]:
         return v / 100.0 if v is not None else None
     prices = market.get("outcomePrices") or []
     try:
-        return float(prices[0]) if prices else None
+        v = float(prices[0]) if prices else None
+        return None if (v is None or math.isnan(v)) else v
     except (ValueError, TypeError):
         return None
 
@@ -145,18 +151,69 @@ class StreamingDetector:
         self._k = k
         self._min_confidence = min_confidence
         self._lock = threading.Lock()
-        # Serialise LLM calls across all poller threads — prevents both threads
-        # from firing simultaneously and blowing the shared Groq TPM limit.
-        self._llm_sem = threading.Semaphore(1)
         self._index = None
         self._meta: list[dict] = []
         self._model = None
+        # LLM calls run in a single background worker thread so pollers never block.
+        self._llm_queue: queue.Queue = queue.Queue()
+        self._llm_worker = threading.Thread(target=self._llm_loop, daemon=True, name="llm-worker")
+        self._llm_worker.start()
 
     def _get_backend(self):
-        """Return a thread-local LLMBackend instance (one per poller thread)."""
+        """Return a thread-local LLMBackend instance (one per worker thread)."""
         if not hasattr(self._thread_local, "backend"):
             self._thread_local.backend = self._backend_factory()
         return self._thread_local.backend
+
+    def _llm_loop(self) -> None:
+        """Background worker: drain the queue and make LLM calls one at a time."""
+        while True:
+            item = self._llm_queue.get()
+            if item is None:  # shutdown sentinel
+                break
+            group_df, group = item
+            try:
+                _t0 = time.time()
+                question = group[0]["question"]
+                print(f"[{_ts()}] LLM     calling for \"{question[:60]}\" (group={len(group)}, queue={self._llm_queue.qsize()})", flush=True)
+                category, raw_pairs = asyncio.run(
+                    _discover_pairs_in_group(self._get_backend(), group_df)
+                )
+                print(f"[{_ts()}] LLM     done in {time.time()-_t0:.1f}s  cat={category}  pairs={len(raw_pairs)}", flush=True)
+            except Exception as exc:
+                logging.getLogger(__name__).warning("LLM call failed: %s", exc)
+                continue
+
+            q_to_row = {r["question"]: r for r in group}
+
+            for pair in raw_pairs:
+                if not pair.get("is_same_outcome"):
+                    continue
+                conf = float(pair.get("confidence_score", 0))
+                if conf < self._min_confidence:
+                    continue
+
+                row_a = q_to_row.get(pair.get("question_a", ""))
+                row_b = q_to_row.get(pair.get("question_b", ""))
+                if row_a is None or row_b is None:
+                    continue
+                if row_a["platform"] == row_b["platform"]:
+                    continue
+
+                price_a = row_a.get("price_yes")
+                price_b = row_b.get("price_yes")
+                if price_a is None or price_b is None:
+                    continue
+                if math.isnan(price_a) or math.isnan(price_b):
+                    continue
+
+                spread = abs(price_a - price_b)
+                if spread < self._spread_threshold:
+                    continue
+
+                _upsert_pair(self._sf, row_a, row_b, spread, conf,
+                             category, pair.get("rationale", ""))
+                _print_opportunity(row_a, row_b, spread, conf)
 
     def bootstrap(self, db_path: str) -> None:
         """Load all existing markets, embed them, build the faiss index."""
@@ -191,6 +248,9 @@ class StreamingDetector:
 
         if not question or not market_id:
             return
+        # KXMV are Kalshi multi-game parlay composites — no Polymarket equivalent
+        if platform == "kalshi" and market_id.startswith("KXMV"):
+            return
 
         emb = self._model.encode([question], normalize_embeddings=True).astype(np.float32)
 
@@ -203,9 +263,9 @@ class StreamingDetector:
             n_total = self._index.ntotal
             if n_total > 0:
                 k = min(self._k, n_total)
-                _, indices = self._index.search(emb, k)
-                for idx in indices[0]:
-                    if 0 <= idx < len(self._meta):
+                scores, indices = self._index.search(emb, k)
+                for score, idx in zip(scores[0], indices[0]):
+                    if 0 <= idx < len(self._meta) and score >= MIN_CROSS_PLATFORM_SIM:
                         group.append(self._meta[idx])
 
             self._index.add(emb)
@@ -214,46 +274,13 @@ class StreamingDetector:
         if len(group) < 2:
             return
 
-        # LLM call outside the index lock — serialised via semaphore so both
-        # poller threads never hit Groq simultaneously (shared TPM budget).
-        group_df = pd.DataFrame(group)
-        with self._llm_sem:
-            try:
-                category, raw_pairs = asyncio.run(
-                    _discover_pairs_in_group(self._get_backend(), group_df)
-                )
-            except Exception as exc:
-                logging.getLogger(__name__).warning("LLM call failed: %s", exc)
-                return
+        # Skip LLM if all neighbors are on the same platform — nothing to arbitrage
+        platforms_in_group = {r["platform"] for r in group}
+        if len(platforms_in_group) < 2:
+            return
 
-            q_to_row = {r["question"]: r for r in group}
-
-            for pair in raw_pairs:
-                if not pair.get("is_same_outcome"):
-                    continue
-                conf = float(pair.get("confidence_score", 0))
-                if conf < self._min_confidence:
-                    continue
-
-                row_a = q_to_row.get(pair.get("question_a", ""))
-                row_b = q_to_row.get(pair.get("question_b", ""))
-                if row_a is None or row_b is None:
-                    continue
-                if row_a["platform"] == row_b["platform"]:
-                    continue  # same platform — not actionable
-
-                price_a = row_a.get("price_yes")
-                price_b = row_b.get("price_yes")
-                if price_a is None or price_b is None:
-                    continue
-
-                spread = abs(price_a - price_b)
-                if spread < self._spread_threshold:
-                    continue
-
-                _upsert_pair(self._sf, row_a, row_b, spread, conf,
-                             category, pair.get("rationale", ""))
-                _print_opportunity(row_a, row_b, spread, conf)
+        # Enqueue for background LLM processing — pollers never block on LLM.
+        self._llm_queue.put((pd.DataFrame(group), group))
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -277,7 +304,7 @@ def main() -> None:
             model=config.LLM_MODEL,
             api_key=config.GROQ_API_KEY,
             base_url="https://api.groq.com/openai/v1",
-            rpm_limit=30,
+            rpm_limit=5,
         )
 
     sf = init_db(args.db)

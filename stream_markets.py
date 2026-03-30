@@ -189,8 +189,12 @@ def poll_kalshi(
 
     while time.monotonic() < deadline:
         try:
+            client.reset_session()
             min_ts = int(time.time()) - lookback
             batch_count = 0
+            new_count = 0
+            if not is_seed:
+                print(f"[{_ts()}] KALSHI  poll starting (lookback={lookback}s)", flush=True)
 
             for market in client.iter_markets(status="open", min_created_ts=min_ts):
                 ticker = market.get("ticker", "")
@@ -204,13 +208,14 @@ def poll_kalshi(
                 if ticker not in seen:
                     seen.add(ticker)
                     if not is_seed:
+                        new_count += 1
                         print_kalshi(market)
                         if on_new_market is not None:
                             on_new_market(market)
 
             if SessionFactory:
                 label = "seed" if is_seed else "poll"
-                print(f"[{_ts()}] KALSHI  {label} upserted {batch_count} markets", flush=True)
+                print(f"[{_ts()}] KALSHI  {label} upserted {batch_count} markets ({new_count} new)", flush=True)
 
         except Exception as exc:
             print(f"[{_ts()}] KALSHI  poll error: {exc}", file=sys.stderr)
@@ -250,9 +255,12 @@ def poll_polymarket(
 
     while time.monotonic() < deadline:
         try:
+            client.reset_session()
             cutoff = datetime.fromtimestamp(time.time() - lookback, tz=timezone.utc).isoformat()
             new_markets: list[dict] = []
             batch_count = 0
+            if not is_seed:
+                print(f"[{_ts()}] POLY    poll starting (lookback={lookback}s)", flush=True)
 
             for market in client.iter_markets(
                 active=True, closed=False,
@@ -279,7 +287,7 @@ def poll_polymarket(
 
             if SessionFactory:
                 label = "seed" if is_seed else "poll"
-                print(f"[{_ts()}] POLY    {label} upserted {batch_count} markets", flush=True)
+                print(f"[{_ts()}] POLY    {label} upserted {batch_count} markets ({len(new_markets)} new)", flush=True)
 
         except Exception as exc:
             print(f"[{_ts()}] POLY    poll error: {exc}", file=sys.stderr)

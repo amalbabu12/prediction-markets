@@ -55,6 +55,12 @@ class _BaseClient:
         self._session.headers.update({"Accept": "application/json"})
         self._rl = _RateLimiter(rate_limit)
 
+    def reset_session(self) -> None:
+        """Close the current connection pool and open a fresh one."""
+        self._session.close()
+        self._session = requests.Session()
+        self._session.headers.update({"Accept": "application/json"})
+
     def _get(
         self,
         path: str,

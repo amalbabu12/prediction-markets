@@ -52,6 +52,9 @@ def load_markets(
             q = session.query(KalshiMarket)
             if active_only:
                 q = q.filter(KalshiMarket.status == "active")
+                # Exclude KXMV multi-game parlay markets — they are composite
+                # bets with no cross-platform equivalent on Polymarket.
+                q = q.filter(~KalshiMarket.ticker.like("KXMV%"))
             markets = q.all()
             for m in markets:
                 question = m.title or ""

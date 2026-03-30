@@ -75,10 +75,10 @@ services:
     command: >
       python detect_arbitrage.py
         --db /data/markets.db
-        --interval 300
-        --lookback 360
+        --interval 900
+        --lookback 960
         --k 10
-        --spread 0.04
+        --spread 0.0
     restart: unless-stopped
 
 volumes:

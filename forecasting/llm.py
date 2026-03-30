@@ -93,17 +93,15 @@ class OpenAICompatibleBackend(LLMBackend):
         **extra_kwargs: Any,
     ) -> None:
         import threading as _threading
-        from openai import AsyncOpenAI
 
         self.model = model
+        self._api_key = api_key or "none"
+        self._base_url = base_url
         self._temperature = temperature
         self._extra_kwargs = extra_kwargs
         self._rpm_lock = _threading.Lock() if rpm_limit > 0 else None
         self._rpm_interval = (60.0 / rpm_limit) if rpm_limit > 0 else 0.0
         self._last_call_time: float = 0.0
-        # max_retries=0: disable openai's built-in retry loop so our token-bucket
-        # retry logic has full control and doesn't double the request count.
-        self._client = AsyncOpenAI(api_key=api_key or "none", base_url=base_url, max_retries=0)
         logger.info(
             "OpenAICompatibleBackend initialised — model=%s  endpoint=%s",
             model, base_url or "OpenAI",
@@ -114,7 +112,7 @@ class OpenAICompatibleBackend(LLMBackend):
         user_prompt: str,
         system_prompt: str = "",
         max_new_tokens: int = 2048,
-        _retries: int = 6,
+        _retries: int = 3,
     ) -> str:
         import asyncio as _asyncio
         import time as _time
@@ -125,46 +123,55 @@ class OpenAICompatibleBackend(LLMBackend):
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": user_prompt})
 
-        for attempt in range(_retries):
-            # Token bucket — threading.Lock works across event loops / threads
-            if self._rpm_lock is not None:
-                with self._rpm_lock:
-                    elapsed = _time.monotonic() - self._last_call_time
-                    wait = self._rpm_interval - elapsed
-                    self._last_call_time = _time.monotonic()
-                if wait > 0:
-                    await _asyncio.sleep(wait)
+        # Create a fresh client per generate() call so the httpx connection pool
+        # is always bound to the current event loop (avoids ConnectError when
+        # asyncio.run() is called repeatedly from threads).
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(api_key=self._api_key, base_url=self._base_url, max_retries=0, timeout=60.0)
 
-            try:
-                response = await self._client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    max_tokens=max_new_tokens,
-                    temperature=self._temperature,
-                    **self._extra_kwargs,
-                )
-                return response.choices[0].message.content or ""
-            except Exception as exc:
-                err = str(exc)
-                is_rate_limit = (
-                    "429" in err
-                    or "rate_limit" in err.lower()
-                    or "resource_exhausted" in err.lower()
-                    or "quota" in err.lower()
-                    or "too many requests" in err.lower()
-                )
-                if is_rate_limit:
-                    m = _re.search(r"try again in (\d+(?:\.\d+)?)s", err, _re.IGNORECASE)
-                    wait = float(m.group(1)) + 2 if m else min(60, 5 * (2 ** attempt))
-                    logger.warning("Rate limited, retrying in %.0fs (attempt %d/%d)", wait, attempt + 1, _retries)
-                    await _asyncio.sleep(wait)
-                    continue
-                logger.error("generate() failed (attempt %d/%d): %s", attempt + 1, _retries, exc)
-                if attempt < _retries - 1:
-                    await _asyncio.sleep(2)
-                    continue
-        logger.error("generate() exhausted %d retries", _retries)
-        return ""
+        try:
+            for attempt in range(_retries):
+                # Token bucket — threading.Lock works across event loops / threads
+                if self._rpm_lock is not None:
+                    with self._rpm_lock:
+                        elapsed = _time.monotonic() - self._last_call_time
+                        wait = self._rpm_interval - elapsed
+                        self._last_call_time = _time.monotonic()
+                    if wait > 0:
+                        await _asyncio.sleep(wait)
+
+                try:
+                    response = await client.chat.completions.create(
+                        model=self.model,
+                        messages=messages,
+                        max_tokens=max_new_tokens,
+                        temperature=self._temperature,
+                        **self._extra_kwargs,
+                    )
+                    return response.choices[0].message.content or ""
+                except Exception as exc:
+                    err = str(exc)
+                    is_rate_limit = (
+                        "429" in err
+                        or "rate_limit" in err.lower()
+                        or "resource_exhausted" in err.lower()
+                        or "quota" in err.lower()
+                        or "too many requests" in err.lower()
+                    )
+                    if is_rate_limit:
+                        m = _re.search(r"try again in (\d+(?:\.\d+)?)s", err, _re.IGNORECASE)
+                        wait = min(60, float(m.group(1)) + 2) if m else min(60, 5 * (2 ** attempt))
+                        logger.warning("Rate limited, retrying in %.0fs (attempt %d/%d)", wait, attempt + 1, _retries)
+                        await _asyncio.sleep(wait)
+                        continue
+                    logger.error("generate() failed (attempt %d/%d): %s", attempt + 1, _retries, exc)
+                    if attempt < _retries - 1:
+                        await _asyncio.sleep(2)
+                        continue
+            logger.error("generate() exhausted %d retries", _retries)
+            return ""
+        finally:
+            await client.close()
 
 
 # ── HuggingFace implementation ────────────────────────────────────────────────
@@ -261,7 +268,7 @@ class HuggingFaceBackend(LLMBackend):
                 if "429" in err or "rate_limit" in err.lower():
                     # Try to parse "Please try again in Xs" from Groq's message
                     m = _re.search(r"try again in (\d+(?:\.\d+)?)s", err)
-                    wait = float(m.group(1)) + 2 if m else min(65, 5 * (2 ** attempt))
+                    wait = min(60, float(m.group(1)) + 2) if m else min(60, 5 * (2 ** attempt))
                     logger.warning("Rate limited, retrying in %.0fs (attempt %d/%d)", wait, attempt + 1, _retries)
                     await _asyncio.sleep(wait)
                     continue

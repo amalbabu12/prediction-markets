@@ -54,22 +54,28 @@ _PAIRS_SYSTEM = (
 )
 
 _PAIRS_USER = """\
-Below are semantically related prediction market questions. First assign the \
-group a category, then identify pairs whose outcomes are correlated.
+Below are prediction market questions from different platforms. First assign the \
+group a category, then identify pairs that are ARBITRAGE-WORTHY — i.e. where \
+the two questions are so closely matched that buying YES on one and YES on the \
+other is a near-certain combined win (or loss).
 
-SAME OUTCOME (is_same_outcome=true): Both markets will likely resolve the same \
-way — both YES or both NO. This is the common case for semantically related \
-markets. Examples: two prop bets in the same game that tend to fail together, \
-two markets tracking the same underlying event, two longshots on the same team.
+SAME OUTCOME (is_same_outcome=true): The two markets resolve on the EXACT SAME \
+underlying event with the SAME threshold, the SAME time window, and the SAME \
+direction. Both will resolve YES together or NO together with very high certainty. \
+DO NOT use this just because markets are on the same topic. \
+BAD examples (do NOT flag): "BTC above $80k by March" vs "BTC above $85k by April" \
+(different threshold AND date), "Team A wins game 1" vs "Team A wins game 2" \
+(different events), "BTC market cap #1" vs "ETH market cap #2" (different assets). \
+GOOD examples: identical question text on two platforms, or questions that differ \
+only in platform-specific wording but resolve on identical criteria.
 
-DIFFERENT OUTCOME (is_same_outcome=false): ONLY use this for direct logical \
-opposites where one resolving YES forces the other to resolve NO. Examples: \
-"Team A wins" vs "Team A loses/does NOT win", "price above X" vs "price below X", \
-"event happens" vs "event does NOT happen". Do NOT use this just because two \
-markets ask about different things — use it only for genuine inverses.
+DIFFERENT OUTCOME (is_same_outcome=false): Direct logical inverses where one \
+resolving YES forces the other to resolve NO. Only genuine inverses — "price \
+above X" vs "price below X" for the same asset, date, and threshold.
 
-Default to is_same_outcome=true when uncertain. Only omit a pair entirely if \
-you have no meaningful view on their correlation.
+OMIT a pair entirely if you are not highly confident (>= 0.8) in the relationship. \
+It is better to miss a pair than to flag a false arbitrage. \
+When in doubt, leave it out.
 
 Copy question text exactly as it appears below.
 
@@ -92,7 +98,7 @@ Respond with exactly this JSON format:
   ]
 }}
 
-Return {{"category": "other", "pairs": []}} if no meaningful relationships exist."""
+Return {{"category": "other", "pairs": []}} if no high-confidence arbitrage pairs exist."""
 
 
 # ── Data model ────────────────────────────────────────────────────────────────

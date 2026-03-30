@@ -85,6 +85,18 @@ class KalshiClient:
         )
         self._rl = _RateLimiter(rate_limit)
 
+    def reset_session(self) -> None:
+        """Close the current connection pool and open a fresh one.
+
+        Call this before each poll so stale CLOSE_WAIT connections are never
+        reused after a long inter-poll sleep.
+        """
+        self._session.close()
+        self._session = requests.Session()
+        self._session.headers.update(
+            {"Accept": "application/json", "Content-Type": "application/json"}
+        )
+
     @property
     def is_authenticated(self) -> bool:
         return bool(self.api_key_id and self._private_key)
