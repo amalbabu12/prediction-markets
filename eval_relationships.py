@@ -1,20 +1,25 @@
 """
 Evaluate relationship-discovery accuracy against resolved markets.
 
-Mirrors the methodology from "Semantic Trading" (arXiv:2512.02436):
-  1. Load N resolved binary markets from the DB
-  2. Embed questions with all-MiniLM-L6-v2
-  3. K-means cluster into groups of ~10 (K = N // 10)
-  4. Run LLM relationship discovery on each cluster
-  5. Compare predicted is_same_outcome against ground truth
-     (ground truth = both markets resolved identically)
-  6. Report accuracy at multiple confidence thresholds
+Two evaluation modes:
+
+  --mode kmeans  (default, paper methodology — arXiv:2512.02436)
+    1. Load N resolved markets
+    2. Embed + K-means cluster into groups of ~10
+    3. Run LLM on each cluster
+    4. Evaluate all discovered pairs against ground truth
+
+  --mode knn  (detector methodology — mirrors the streaming detector)
+    1. Load N resolved markets from each platform
+    2. Embed all, build a FAISS index per platform
+    3. For each market on platform A, find K nearest neighbors on platform B
+       with cosine similarity >= MIN_CROSS_PLATFORM_SIM
+    4. Form anchor+neighbors group, run LLM
+    5. Evaluate only the cross-platform pairs
 
 Usage:
-    python eval_relationships.py [--db PATH] [--n N] [--platform PLATFORM]
-                                  [--output PATH]
-
-Results are written to a JSON file and printed as a summary table.
+    python eval_relationships.py [--db PATH] [--n N] [--mode MODE]
+                                  [--poly-csv PATH] [--output PATH]
 """
 from __future__ import annotations
 
@@ -135,7 +140,8 @@ async def run_cluster(
     return results
 
 
-def _load_resolved_markets(db_path: str, platforms: tuple[str, ...]) -> pd.DataFrame:
+def _load_resolved_markets(db_path: str, platforms: tuple[str, ...],
+                           poly_csv: str | None = None) -> pd.DataFrame:
     """Load resolved markets directly via sqlite3 (bypasses SQLAlchemy WAL conflict)."""
     import sqlite3
     rows = []
@@ -169,20 +175,16 @@ def _load_resolved_markets(db_path: str, platforms: tuple[str, ...]) -> pd.DataF
                 rows.append({"id": ticker, "platform": "kalshi",
                              "question": question, "outcome": outcome,
                              "price_yes": price})
-        if "polymarket" in platforms:
-            cur.execute("""
-                SELECT condition_id, question, price_yes
-                FROM polymarket_markets
-                WHERE closed = 1
-                  AND price_yes IS NOT NULL
-                  AND (price_yes >= 0.99 OR price_yes <= 0.01)
-                  AND question IS NOT NULL AND question != ''
-            """)
-            for cid, question, price_yes in cur.fetchall():
-                outcome = "YES" if price_yes >= 0.99 else "NO"
-                rows.append({"id": cid, "platform": "polymarket",
-                             "question": question.strip(), "outcome": outcome,
-                             "price_yes": price_yes})
+        if "polymarket" in platforms and poly_csv:
+            poly_df = pd.read_csv(poly_csv)
+            for _, r in poly_df.iterrows():
+                if r.get("question") and r.get("id"):
+                    rows.append({
+                        "id": r["id"], "platform": "polymarket",
+                        "question": str(r["question"]).strip(),
+                        "outcome": r.get("outcome", "YES"),
+                        "price_yes": r.get("price_yes"),
+                    })
     finally:
         conn.close()
     return pd.DataFrame(rows)
@@ -193,7 +195,8 @@ async def main_async(args: argparse.Namespace) -> None:
     platforms = tuple(args.platform.split(","))
 
     print(f"[{_ts()}] Loading resolved markets (platforms={platforms}, n={args.n}) ...")
-    df = _load_resolved_markets(args.db, platforms)
+    poly_csv = getattr(args, "poly_csv", None)
+    df = _load_resolved_markets(args.db, platforms, poly_csv=poly_csv)
 
     if df.empty:
         print("ERROR: No resolved markets found in the DB.")
@@ -218,19 +221,7 @@ async def main_async(args: argparse.Namespace) -> None:
     model = SentenceTransformer("all-MiniLM-L6-v2", device=device)
     embeddings = embed_questions(df, model=model)
 
-    # ── Cluster ────────────────────────────────────────────────────────────────
-    k = max(2, len(df) // 10)
-    print(f"[{_ts()}] K-means clustering into {k} clusters ...")
-    labels = kmeans_cluster(embeddings, k)
-    df["cluster"] = labels
-
-    cluster_sizes = pd.Series(labels).value_counts()
-    print(f"[{_ts()}] Cluster size — mean={cluster_sizes.mean():.1f}  "
-          f"median={cluster_sizes.median():.0f}  max={cluster_sizes.max()}")
-
-    # ── LLM discovery ──────────────────────────────────────────────────────────
-    # Use a smaller/faster model with higher TPM limits for bulk eval.
-    # llama-3.1-8b-instant: 30k TPM vs llama-3.3-70b-versatile: 6k TPM on Groq free tier.
+    # ── LLM backend ────────────────────────────────────────────────────────────
     eval_model = os.getenv("EVAL_LLM_MODEL", "llama-3.1-8b-instant")
     backend = OpenAICompatibleBackend(
         model=eval_model,
@@ -238,19 +229,86 @@ async def main_async(args: argparse.Namespace) -> None:
         base_url="https://api.groq.com/openai/v1",
         rpm_limit=25,
     )
-    print(f"[{_ts()}] LLM model: {eval_model}")
+    print(f"[{_ts()}] LLM model: {eval_model}  mode: {args.mode}")
 
-    records = df.to_dict("records")
-    clusters: dict[int, list[dict]] = defaultdict(list)
-    for r in records:
-        clusters[int(r["cluster"])].append(r)
-
-    print(f"[{_ts()}] Running LLM on {k} clusters (rpm_limit=5) ...")
     all_pairs: list[dict] = []
-    for cid in sorted(clusters.keys()):
-        members = clusters[cid]
-        pairs = await run_cluster(backend, cid, members, verbose=args.verbose)
-        all_pairs.extend(pairs)
+
+    if args.mode == "kmeans":
+        # ── K-means clustering (paper methodology) ────────────────────────────
+        k = max(2, len(df) // 10)
+        print(f"[{_ts()}] K-means clustering into {k} clusters ...")
+        labels = kmeans_cluster(embeddings, k)
+        df["cluster"] = labels
+        cluster_sizes = pd.Series(labels).value_counts()
+        print(f"[{_ts()}] Cluster size — mean={cluster_sizes.mean():.1f}  "
+              f"median={cluster_sizes.median():.0f}  max={cluster_sizes.max()}")
+
+        records = df.to_dict("records")
+        clusters: dict[int, list[dict]] = defaultdict(list)
+        for r in records:
+            clusters[int(r["cluster"])].append(r)
+
+        print(f"[{_ts()}] Running LLM on {k} clusters ...")
+        for cid in sorted(clusters.keys()):
+            pairs = await run_cluster(backend, cid, clusters[cid], verbose=args.verbose)
+            all_pairs.extend(pairs)
+
+    else:
+        # ── KNN cross-platform (detector methodology) ─────────────────────────
+        import faiss
+        from detect_arbitrage import MIN_CROSS_PLATFORM_SIM
+
+        records = df.to_dict("records")
+        platforms_present = df["platform"].unique().tolist()
+        if len(platforms_present) < 2:
+            print("ERROR: KNN mode needs at least 2 platforms. Use --platform kalshi,polymarket")
+            return
+
+        # Build per-platform FAISS indexes
+        plat_indexes: dict[str, tuple] = {}  # platform -> (index, [record])
+        for plat in platforms_present:
+            mask = df["platform"] == plat
+            plat_embs = embeddings[mask.values].astype(np.float32)
+            plat_recs = [r for r in records if r["platform"] == plat]
+            idx = faiss.IndexFlatIP(plat_embs.shape[1])
+            idx.add(plat_embs)
+            plat_indexes[plat] = (idx, plat_recs)
+
+        print(f"[{_ts()}] Built {len(plat_indexes)} platform indexes: "
+              + ", ".join(f"{p}={len(v[1])}" for p, v in plat_indexes.items()))
+
+        # For each market on platform A, find K nearest on platform B
+        k_neighbors = args.k
+        seen_groups: set[frozenset] = set()
+        groups: list[list[dict]] = []
+
+        for i, rec in enumerate(records):
+            anchor_platform = rec["platform"]
+            anchor_emb = embeddings[i:i+1].astype(np.float32)
+
+            for other_platform, (other_idx, other_recs) in plat_indexes.items():
+                if other_platform == anchor_platform:
+                    continue
+                k_actual = min(k_neighbors, other_idx.ntotal)
+                scores, indices = other_idx.search(anchor_emb, k_actual)
+                neighbors = [
+                    other_recs[idx]
+                    for score, idx in zip(scores[0], indices[0])
+                    if 0 <= idx < len(other_recs) and score >= MIN_CROSS_PLATFORM_SIM
+                ]
+                if not neighbors:
+                    continue
+                group = [rec] + neighbors
+                group_key = frozenset(r["id"] for r in group)
+                if group_key in seen_groups:
+                    continue
+                seen_groups.add(group_key)
+                groups.append(group)
+
+        print(f"[{_ts()}] Found {len(groups)} cross-platform KNN groups ...")
+        for gid, group in enumerate(groups):
+            pairs = await run_cluster(backend, gid, group, verbose=args.verbose)
+            all_pairs.extend(pairs)
 
     # ── Evaluate ───────────────────────────────────────────────────────────────
     evaluable = [p for p in all_pairs if p["evaluable"]]
@@ -296,7 +354,7 @@ async def main_async(args: argparse.Namespace) -> None:
         "run_at": datetime.now(timezone.utc).isoformat(),
         "args": vars(args),
         "n_markets": len(df),
-        "n_clusters": k,
+        "n_clusters": k if args.mode == "kmeans" else len(groups) if args.mode == "knn" else 0,
         "n_pairs_total": len(all_pairs),
         "n_pairs_evaluable": len(evaluable),
         "threshold_results": threshold_results,
@@ -314,6 +372,12 @@ def main() -> None:
                         help="Number of resolved markets to evaluate on (balanced YES/NO)")
     parser.add_argument("--platform", default="kalshi",
                         help="Comma-separated platforms: kalshi, polymarket, or kalshi,polymarket")
+    parser.add_argument("--mode", default="kmeans", choices=["kmeans", "knn"],
+                        help="kmeans: paper methodology; knn: mirrors the streaming detector")
+    parser.add_argument("--k", type=int, default=10,
+                        help="Nearest neighbors per market in knn mode (default: 10)")
+    parser.add_argument("--poly-csv", default=None,
+                        help="CSV from collect_resolved_polymarket.py for Polymarket resolved data")
     parser.add_argument("--output", default="./output/eval_results.json")
     parser.add_argument("--verbose", action="store_true",
                         help="Print per-cluster LLM call details")
