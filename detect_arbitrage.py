@@ -37,7 +37,9 @@ import numpy as np
 import config
 from clients.kalshi import KalshiClient
 from clients.polymarket import PolymarketGammaClient
-from db.models import init_db, ArbitragePair
+from clients.ws_kalshi import KalshiWSClient
+from clients.ws_polymarket import PolymarketWSClient
+from db.models import init_db, ArbitragePair, WatchedPair
 from forecasting.embedder import embed_questions
 from forecasting.loader import load_markets
 from forecasting.llm import OpenAICompatibleBackend
@@ -56,16 +58,26 @@ MIN_CROSS_PLATFORM_SIM = 0.55
 
 # ── Price / question / id extraction from raw API dicts ──────────────────────
 
-def _get_price(market: dict, platform: str) -> Optional[float]:
+def _get_prices(market: dict, platform: str) -> tuple[Optional[float], Optional[float]]:
+    """Return (yes_ask, no_ask) as decimals in [0, 1]."""
     if platform == "kalshi":
-        v = market.get("yes_ask")
-        return v / 100.0 if v is not None else None
+        yes = market.get("yes_ask")
+        no = market.get("no_ask")
+        return (
+            yes / 100.0 if yes is not None else None,
+            no / 100.0 if no is not None else None,
+        )
     prices = market.get("outcomePrices") or []
     try:
-        v = float(prices[0]) if prices else None
-        return None if (v is None or math.isnan(v)) else v
+        yes = float(prices[0]) if len(prices) > 0 else None
+        no = float(prices[1]) if len(prices) > 1 else None
+        if yes is not None and math.isnan(yes):
+            yes = None
+        if no is not None and math.isnan(no):
+            no = None
+        return (yes, no)
     except (ValueError, TypeError):
-        return None
+        return (None, None)
 
 
 def _get_question(market: dict, platform: str) -> str:
@@ -81,6 +93,48 @@ def _get_id(market: dict, platform: str) -> str:
     if platform == "kalshi":
         return market.get("ticker", "")
     return market.get("conditionId", "")
+
+
+# ── Arbitrage math ────────────────────────────────────────────────────────────
+
+def compute_arb(
+    yes_a: float, no_a: float,
+    yes_b: float, no_b: float,
+    is_same_outcome: bool,
+) -> tuple[float, str]:
+    """
+    Compute the risk-free arbitrage profit using actual ask prices.
+
+    Returns (profit, strategy) where profit > 0 means a real arb exists.
+
+    Entailment (is_same_outcome=True):
+        Both markets resolve the same way (A=YES ↔ B=YES).
+        Strategy: buy YES on the cheap side, buy NO on the expensive side.
+        Guaranteed payout = $1. Profit = $1 - cost.
+
+    Contradiction (is_same_outcome=False):
+        Markets resolve opposite (A=YES ↔ B=NO).
+        Strategy: buy the same side on both (YES+YES or NO+NO).
+        Guaranteed payout = $1. Profit = $1 - cost.
+    """
+    if is_same_outcome:
+        # buy YES A + NO B  vs  buy YES B + NO A
+        profit_ab = 1.0 - yes_a - no_b
+        profit_ba = 1.0 - yes_b - no_a
+        if profit_ab >= profit_ba:
+            return (profit_ab,
+                    f"BUY YES {{}}.A @ {yes_a:.3f} + BUY NO {{}}.B @ {no_b:.3f}")
+        return (profit_ba,
+                f"BUY YES {{}}.B @ {yes_b:.3f} + BUY NO {{}}.A @ {no_a:.3f}")
+    else:
+        # buy YES on both  vs  buy NO on both
+        profit_yes = 1.0 - yes_a - yes_b
+        profit_no = 1.0 - no_a - no_b
+        if profit_yes >= profit_no:
+            return (profit_yes,
+                    f"BUY YES {{}}.A @ {yes_a:.3f} + BUY YES {{}}.B @ {yes_b:.3f}")
+        return (profit_no,
+                f"BUY NO {{}}.A @ {no_a:.3f} + BUY NO {{}}.B @ {no_b:.3f}")
 
 
 # ── DB write ──────────────────────────────────────────────────────────────────
@@ -102,20 +156,86 @@ def _upsert_pair(sf, row_a: dict, row_b: dict, spread: float, conf: float,
         session.commit()
 
 
+def _upsert_watched_pair(
+    sf,
+    row_a: dict,
+    row_b: dict,
+    is_same_outcome: bool,
+    conf: float,
+    category: str,
+    rationale: str,
+) -> None:
+    """Register a semantically related cross-platform pair for continuous price monitoring."""
+    from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+
+    yes_a = row_a.get("price_yes")
+    no_a = row_a.get("price_no")
+    yes_b = row_b.get("price_yes")
+    no_b = row_b.get("price_no")
+
+    if all(v is not None for v in (yes_a, no_a, yes_b, no_b)):
+        spread, _ = compute_arb(yes_a, no_a, yes_b, no_b, is_same_outcome)
+    else:
+        spread = None
+
+    vals = dict(
+        is_same_outcome=is_same_outcome,
+        id_a=row_a["id"],            platform_a=row_a["platform"],
+        question_a=row_a["question"],
+        token_id_a=row_a.get("token_id_yes"),
+        token_id_no_a=row_a.get("token_id_no"),
+        price_yes_a=yes_a,           price_no_a=no_a,
+        id_b=row_b["id"],            platform_b=row_b["platform"],
+        question_b=row_b["question"],
+        token_id_b=row_b.get("token_id_yes"),
+        token_id_no_b=row_b.get("token_id_no"),
+        price_yes_b=yes_b,           price_no_b=no_b,
+        spread=spread, confidence_score=conf,
+        category=category, rationale=rationale,
+    )
+    stmt = (
+        sqlite_insert(WatchedPair)
+        .values(**vals)
+        .on_conflict_do_update(
+            index_elements=["id_a", "id_b"],
+            set_={
+                "is_same_outcome": is_same_outcome,
+                "token_id_a": vals["token_id_a"],
+                "token_id_no_a": vals["token_id_no_a"],
+                "token_id_b": vals["token_id_b"],
+                "token_id_no_b": vals["token_id_no_b"],
+                "price_yes_a": yes_a, "price_no_a": no_a,
+                "price_yes_b": yes_b, "price_no_b": no_b,
+                "spread": spread,
+                "confidence_score": conf,
+            },
+        )
+    )
+    with sf() as session:
+        session.execute(stmt)
+        session.commit()
+
+
 # ── Alert formatting ──────────────────────────────────────────────────────────
 
-def _print_opportunity(row_a: dict, row_b: dict, spread: float, conf: float) -> None:
-    if (row_a.get("price_yes") or 1) <= (row_b.get("price_yes") or 0):
-        buy, sell = row_a, row_b
-    else:
-        buy, sell = row_b, row_a
+def _print_opportunity(
+    row_a: dict, row_b: dict,
+    profit: float, conf: float, strategy: str,
+) -> None:
+    plat_a = row_a["platform"].upper()
+    plat_b = row_b["platform"].upper()
+    # Fill platform names into the strategy template
+    strategy_str = strategy.format(plat_a, plat_b)
 
     print(
-        f"\n[{_ts()}] *** ARBITRAGE  spread={spread:.1%}  conf={conf:.2f} ***\n"
-        f"  BUY YES   {buy['platform'].upper():<12} @ {buy.get('price_yes', '?'):.3f}"
-        f"  {buy['question'][:80]}\n"
-        f"  SELL YES  {sell['platform'].upper():<12} @ {sell.get('price_yes', '?'):.3f}"
-        f"  {sell['question'][:80]}\n",
+        f"\n[{_ts()}] *** ARBITRAGE  profit={profit:.1%}  conf={conf:.2f} ***\n"
+        f"  {strategy_str}\n"
+        f"  A: {plat_a:<12} yes_ask={row_a.get('price_yes', 0):.3f}"
+        f"  no_ask={row_a.get('price_no', 0):.3f}"
+        f"  {row_a['question'][:70]}\n"
+        f"  B: {plat_b:<12} yes_ask={row_b.get('price_yes', 0):.3f}"
+        f"  no_ask={row_b.get('price_no', 0):.3f}"
+        f"  {row_b['question'][:70]}\n",
         flush=True,
     )
 
@@ -187,7 +307,8 @@ class StreamingDetector:
             q_to_row = {r["question"]: r for r in group}
 
             for pair in raw_pairs:
-                if not pair.get("is_same_outcome"):
+                is_same = pair.get("is_same_outcome")
+                if is_same is None:
                     continue
                 conf = float(pair.get("confidence_score", 0))
                 if conf < self._min_confidence:
@@ -200,20 +321,22 @@ class StreamingDetector:
                 if row_a["platform"] == row_b["platform"]:
                     continue
 
-                price_a = row_a.get("price_yes")
-                price_b = row_b.get("price_yes")
-                if price_a is None or price_b is None:
+                yes_a, no_a = row_a.get("price_yes"), row_a.get("price_no")
+                yes_b, no_b = row_b.get("price_yes"), row_b.get("price_no")
+                if any(v is None for v in (yes_a, no_a, yes_b, no_b)):
                     continue
-                if math.isnan(price_a) or math.isnan(price_b):
-                    continue
-
-                spread = abs(price_a - price_b)
-                if spread < self._spread_threshold:
+                if any(math.isnan(v) for v in (yes_a, no_a, yes_b, no_b)):
                     continue
 
-                _upsert_pair(self._sf, row_a, row_b, spread, conf,
-                             category, pair.get("rationale", ""))
-                _print_opportunity(row_a, row_b, spread, conf)
+                rationale = pair.get("rationale", "")
+                profit, strategy = compute_arb(yes_a, no_a, yes_b, no_b, is_same)
+
+                # Always register for continuous price monitoring.
+                _upsert_watched_pair(self._sf, row_a, row_b, is_same, conf, category, rationale)
+
+                if profit >= self._spread_threshold:
+                    _upsert_pair(self._sf, row_a, row_b, profit, conf, category, rationale)
+                    _print_opportunity(row_a, row_b, profit, conf, strategy)
 
     def bootstrap(self, db_path: str) -> None:
         """Load all existing markets, embed them, build the faiss index."""
@@ -244,7 +367,7 @@ class StreamingDetector:
         """Called for each new market from the poller threads."""
         question = _get_question(market, platform)
         market_id = _get_id(market, platform)
-        price = _get_price(market, platform)
+        price_yes, price_no = _get_prices(market, platform)
 
         if not question or not market_id:
             return
@@ -255,9 +378,15 @@ class StreamingDetector:
         emb = self._model.encode([question], normalize_embeddings=True).astype(np.float32)
 
         # Build group and update index under lock (fast ops only)
+        clob_tokens = market.get("clobTokenIds") or []
+        token_id_yes = clob_tokens[0] if platform == "polymarket" and clob_tokens else None
+        token_id_no = clob_tokens[1] if platform == "polymarket" and len(clob_tokens) > 1 else None
+
         with self._lock:
             new_row = {"id": market_id, "platform": platform,
-                       "question": question, "price_yes": price}
+                       "question": question,
+                       "price_yes": price_yes, "price_no": price_no,
+                       "token_id_yes": token_id_yes, "token_id_no": token_id_no}
             group = [new_row]
 
             n_total = self._index.ntotal
@@ -283,6 +412,201 @@ class StreamingDetector:
         self._llm_queue.put((pd.DataFrame(group), group))
 
 
+# ── Arbitrage watcher (WebSocket-driven) ──────────────────────────────────────
+
+class ArbitrageWatcher:
+    """
+    Subscribes to live WebSocket price feeds for all watched pairs and fires
+    arbitrage alerts the moment a spread crosses the threshold.
+
+    Architecture:
+      - KalshiWSClient   runs in its own daemon thread / event loop
+      - PolymarketWSClient runs in its own daemon thread / event loop
+      - A sync loop (run()) polls the DB every `sync_interval` seconds for
+        newly registered pairs and adds WS subscriptions for new markets.
+      - on_price() is called from WS threads; all shared state is protected
+        by locks so the main thread and sync loop are never blocked.
+
+    Price updates in the DB (price_a, price_b, spread, last_checked_at) are
+    written on every callback so the watchlist is always fresh.
+    """
+
+    def __init__(
+        self,
+        sf,
+        kalshi_client: KalshiClient,
+        spread_threshold: float,
+        sync_interval: int = 60,
+    ) -> None:
+        self._sf = sf
+        self._spread_threshold = spread_threshold
+        self._sync_interval = sync_interval
+        self._log = logging.getLogger("arb-watcher")
+
+        # Price cache: market_id → {"yes": float, "no": float}
+        self._prices: dict[str, dict[str, float]] = {}
+        self._prices_lock = threading.Lock()
+
+        # Pair registry: (id_a, id_b) → pair dict; market_id → list of pair keys
+        self._pairs: dict[tuple, dict] = {}
+        self._market_to_pairs: dict[str, list[tuple]] = {}
+        self._pairs_lock = threading.Lock()
+
+        # WS clients
+        self._kalshi_ws = KalshiWSClient(
+            auth_headers_fn=lambda: kalshi_client._auth_headers("GET", "/trade-api/ws/v2"),
+            on_price=self._on_price,
+        )
+        self._poly_ws = PolymarketWSClient(on_price=self._on_price)
+
+        # Track which market IDs are already subscribed
+        self._subscribed_kalshi: set[str] = set()
+        self._subscribed_poly: set[str] = set()
+
+    # ── Price callback (called from WS threads) ───────────────────────────────
+
+    def _on_price(self, market_id: str, side: str, price: float) -> None:
+        with self._prices_lock:
+            self._prices.setdefault(market_id, {})[side] = price
+
+        with self._pairs_lock:
+            pair_keys = list(self._market_to_pairs.get(market_id, []))
+
+        for key in pair_keys:
+            with self._pairs_lock:
+                pair = self._pairs.get(key)
+            if pair is None:
+                continue
+
+            with self._prices_lock:
+                prices_a = self._prices.get(pair["id_a"], {})
+                prices_b = self._prices.get(pair["id_b"], {})
+                yes_a, no_a = prices_a.get("yes"), prices_a.get("no")
+                yes_b, no_b = prices_b.get("yes"), prices_b.get("no")
+
+            if any(v is None for v in (yes_a, no_a, yes_b, no_b)):
+                continue
+
+            is_same = pair["is_same_outcome"]
+            profit, strategy = compute_arb(yes_a, no_a, yes_b, no_b, is_same)
+            self._update_pair_prices(pair, yes_a, no_a, yes_b, no_b, profit)
+
+            if profit >= self._spread_threshold:
+                conf = pair["confidence_score"] or 0.0
+                row_a = {"id": pair["id_a"], "platform": pair["platform_a"],
+                         "question": pair["question_a"],
+                         "price_yes": yes_a, "price_no": no_a}
+                row_b = {"id": pair["id_b"], "platform": pair["platform_b"],
+                         "question": pair["question_b"],
+                         "price_yes": yes_b, "price_no": no_b}
+                _upsert_pair(self._sf, row_a, row_b, profit, conf,
+                             pair["category"], pair["rationale"])
+                _print_opportunity(row_a, row_b, profit, conf, strategy)
+
+    def _update_pair_prices(
+        self, pair: dict,
+        yes_a: float, no_a: float,
+        yes_b: float, no_b: float,
+        profit: float,
+    ) -> None:
+        from datetime import datetime, timezone
+        try:
+            with self._sf() as session:
+                row = session.get(WatchedPair, pair["db_id"])
+                if row is not None:
+                    row.price_yes_a = yes_a
+                    row.price_no_a = no_a
+                    row.price_yes_b = yes_b
+                    row.price_no_b = no_b
+                    row.spread = profit
+                    row.last_checked_at = datetime.now(timezone.utc)
+                    session.commit()
+        except Exception as exc:
+            self._log.debug("DB update error for pair %s/%s: %s",
+                            pair["id_a"], pair["id_b"], exc)
+
+    # ── Subscription sync ─────────────────────────────────────────────────────
+
+    def _sync(self) -> None:
+        """Load watched pairs from DB, subscribe to any markets not yet subscribed."""
+        with self._sf() as session:
+            rows = session.query(WatchedPair).all()
+            db_pairs = [
+                {
+                    "db_id": r.id,
+                    "is_same_outcome": r.is_same_outcome,
+                    "id_a": r.id_a, "platform_a": r.platform_a,
+                    "question_a": r.question_a,
+                    "token_id_a": r.token_id_a, "token_id_no_a": r.token_id_no_a,
+                    "id_b": r.id_b, "platform_b": r.platform_b,
+                    "question_b": r.question_b,
+                    "token_id_b": r.token_id_b, "token_id_no_b": r.token_id_no_b,
+                    "confidence_score": r.confidence_score,
+                    "category": r.category or "", "rationale": r.rationale or "",
+                }
+                for r in rows
+            ]
+
+        new_kalshi: list[str] = []
+        new_poly_tokens: list[str] = []
+        token_to_market: dict[str, tuple[str, str]] = {}
+
+        with self._pairs_lock:
+            for p in db_pairs:
+                key = (p["id_a"], p["id_b"])
+                if key not in self._pairs:
+                    self._pairs[key] = p
+                    for mid in (p["id_a"], p["id_b"]):
+                        self._market_to_pairs.setdefault(mid, []).append(key)
+
+                # Kalshi subscriptions (WS delivers both yes_ask and no_ask per ticker)
+                for platform, mid in [(p["platform_a"], p["id_a"]),
+                                       (p["platform_b"], p["id_b"])]:
+                    if platform == "kalshi" and mid not in self._subscribed_kalshi:
+                        new_kalshi.append(mid)
+                        self._subscribed_kalshi.add(mid)
+
+                # Polymarket subscriptions — subscribe both YES and NO tokens
+                for platform, cid, tid_yes, tid_no in [
+                    (p["platform_a"], p["id_a"], p["token_id_a"], p["token_id_no_a"]),
+                    (p["platform_b"], p["id_b"], p["token_id_b"], p["token_id_no_b"]),
+                ]:
+                    if platform != "polymarket":
+                        continue
+                    if tid_yes and tid_yes not in self._subscribed_poly:
+                        new_poly_tokens.append(tid_yes)
+                        self._subscribed_poly.add(tid_yes)
+                        token_to_market[tid_yes] = (cid, "yes")
+                    if tid_no and tid_no not in self._subscribed_poly:
+                        new_poly_tokens.append(tid_no)
+                        self._subscribed_poly.add(tid_no)
+                        token_to_market[tid_no] = (cid, "no")
+
+        if new_kalshi:
+            self._kalshi_ws.subscribe(new_kalshi)
+            self._log.info("Subscribed to %d Kalshi tickers: %s",
+                           len(new_kalshi), new_kalshi[:5])
+        if new_poly_tokens:
+            self._poly_ws.subscribe(new_poly_tokens, token_to_market)
+            self._log.info("Subscribed to %d Polymarket tokens", len(new_poly_tokens))
+
+    # ── Main loop ─────────────────────────────────────────────────────────────
+
+    def run(self, deadline: float) -> None:
+        self._kalshi_ws.start()
+        self._poly_ws.start()
+
+        while time.monotonic() < deadline:
+            try:
+                self._sync()
+            except Exception as exc:
+                self._log.warning("sync error: %s", exc)
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            time.sleep(min(self._sync_interval, remaining))
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -297,7 +621,11 @@ def main() -> None:
                         help="Seconds back to look for new markets per poll (default: 300)")
     parser.add_argument("--k", type=int, default=K_NEIGHBORS,
                         help=f"Nearest neighbors per new market (default: {K_NEIGHBORS})")
+    parser.add_argument("--monitor-interval", type=int, default=None,
+                        help="How often (seconds) to sync DB for new watched pairs to subscribe (default: same as --interval)")
     args = parser.parse_args()
+    if args.monitor_interval is None:
+        args.monitor_interval = args.interval
 
     def backend_factory():
         return OpenAICompatibleBackend(
@@ -323,6 +651,13 @@ def main() -> None:
         rate_limit=config.KALSHI_RATE_LIMIT,
     )
     gamma_client = PolymarketGammaClient(rate_limit=config.POLYMARKET_RATE_LIMIT)
+
+    watcher = ArbitrageWatcher(
+        sf=sf,
+        kalshi_client=kalshi_client,
+        spread_threshold=args.spread,
+        sync_interval=args.monitor_interval,
+    )
 
     threads = [
         threading.Thread(
@@ -353,12 +688,18 @@ def main() -> None:
             daemon=True,
             name="polymarket-poller",
         ),
+        threading.Thread(
+            target=watcher.run,
+            args=(deadline,),
+            daemon=True,
+            name="arb-watcher",
+        ),
     ]
 
     print(
         f"Streaming arbitrage detector  |  model={config.LLM_MODEL} (Groq)"
         f"  |  spread>={args.spread:.0%}  |  k={args.k}"
-        f"  |  poll={args.interval}s  |  Ctrl+C to stop\n"
+        f"  |  poll={args.interval}s  |  ws-sync={args.monitor_interval}s  |  Ctrl+C to stop\n"
     )
 
     for t in threads:

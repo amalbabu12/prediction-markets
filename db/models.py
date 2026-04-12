@@ -338,6 +338,56 @@ class ArbitragePair(Base):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Watched pairs  (semantically related cross-platform pairs, watched for price arb)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class WatchedPair(Base):
+    """
+    A cross-platform market pair identified as semantically related by the LLM,
+    regardless of current spread. Covers both entailment (is_same_outcome=True)
+    and contradiction (is_same_outcome=False).
+
+    All such pairs are tracked continuously so that arbitrage can be detected
+    whenever prices diverge — not only at the moment of initial discovery.
+
+    Polymarket token IDs (YES and NO) are stored for WebSocket subscriptions.
+    Null for Kalshi (Kalshi subscribes by ticker directly).
+    """
+    __tablename__ = "watched_pairs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    is_same_outcome = Column(Boolean, nullable=False, default=True)
+    # Market A
+    id_a = Column(String, index=True, nullable=False)
+    platform_a = Column(String, nullable=False)
+    question_a = Column(Text)
+    token_id_a = Column(String)      # Polymarket CLOB token_id_yes
+    token_id_no_a = Column(String)   # Polymarket CLOB token_id_no
+    price_yes_a = Column(Float)      # most recent YES ask
+    price_no_a = Column(Float)       # most recent NO ask
+    # Market B
+    id_b = Column(String, index=True, nullable=False)
+    platform_b = Column(String, nullable=False)
+    question_b = Column(Text)
+    token_id_b = Column(String)
+    token_id_no_b = Column(String)
+    price_yes_b = Column(Float)
+    price_no_b = Column(Float)
+    # Analysis
+    spread = Column(Float, index=True)   # actual arb profit (using correct formula)
+    confidence_score = Column(Float)
+    category = Column(String)
+    rationale = Column(Text)
+    # Timestamps
+    discovered_at = Column(DateTime, default=_now, index=True)
+    last_checked_at = Column(DateTime, index=True)
+
+    __table_args__ = (
+        UniqueConstraint("id_a", "id_b", name="uq_watched_pair"),
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Engine / session factory
 # ══════════════════════════════════════════════════════════════════════════════
 
