@@ -24,7 +24,7 @@ import websockets
 
 log = logging.getLogger(__name__)
 
-WS_URL = "wss://trading-api.kalshi.com/trade-api/ws/v2"
+WS_URL = "wss://api.elections.kalshi.com/trade-api/ws/v2"
 
 
 class KalshiWSClient:

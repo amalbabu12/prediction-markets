@@ -27,7 +27,7 @@ import websockets
 
 log = logging.getLogger(__name__)
 
-WS_URL = "wss://ws-subscriptions-clob.polymarket.com/ws/"
+WS_URL = "wss://ws-subscriptions-clob.polymarket.com/ws/market"
 
 
 class PolymarketWSClient:
@@ -102,7 +102,7 @@ class PolymarketWSClient:
                     if self._subscribed:
                         await ws.send(json.dumps({
                             "assets_ids": list(self._subscribed),
-                            "type": "Market",
+                            "type": "market",
                         }))
 
                     recv_task = asyncio.create_task(self._recv_loop(ws))
@@ -128,7 +128,7 @@ class PolymarketWSClient:
         while True:
             try:
                 batch, mapping = await asyncio.wait_for(
-                    self._subscribe_queue.get(), timeout=20
+                    self._subscribe_queue.get(), timeout=10
                 )
                 self._token_to_market.update(mapping)
                 new = [t for t in batch if t not in self._subscribed]
@@ -136,7 +136,7 @@ class PolymarketWSClient:
                     self._subscribed.update(new)
                     await ws.send(json.dumps({
                         "assets_ids": new,
-                        "type": "Market",
+                        "type": "market",
                     }))
                     log.debug("Polymarket WS subscribed to %d new assets (total=%d)",
                               len(new), len(self._subscribed))
