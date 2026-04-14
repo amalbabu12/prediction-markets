@@ -143,49 +143,57 @@ class PolymarketWSClient:
             except asyncio.TimeoutError:
                 await ws.ping()
 
+    def _handle_msg(self, msg: dict) -> None:
+        """Process a single WS message dict."""
+        event_type = msg.get("event_type", "")
+        asset_id = msg.get("asset_id", "")
+
+        price: Optional[float] = None
+
+        if event_type in ("price_change", "last_trade_price"):
+            raw_price = msg.get("price")
+            if raw_price is not None:
+                try:
+                    price = float(raw_price)
+                except (ValueError, TypeError):
+                    pass
+
+        elif event_type == "book":
+            bids = msg.get("bids") or []
+            asks = msg.get("asks") or []
+            try:
+                best_bid = float(bids[0][0]) if bids else None
+                best_ask = float(asks[0][0]) if asks else None
+                if best_bid is not None and best_ask is not None:
+                    price = (best_bid + best_ask) / 2.0
+            except (IndexError, ValueError, TypeError):
+                pass
+
+        if price is None or not asset_id:
+            return
+
+        mapping = self._token_to_market.get(asset_id)
+        if mapping:
+            cid, side = mapping
+        else:
+            cid = msg.get("market") or asset_id
+            side = "yes"
+        try:
+            self._on_price(cid, side, price)
+        except Exception as exc:
+            log.debug("on_price callback error: %s", exc)
+
     async def _recv_loop(self, ws) -> None:
         """Parse incoming messages and fire the price callback."""
         async for raw in ws:
             try:
-                msg = json.loads(raw)
+                data = json.loads(raw)
             except json.JSONDecodeError:
                 continue
 
-            event_type = msg.get("event_type", "")
-            asset_id = msg.get("asset_id", "")
-            price: Optional[float] = None
-
-            if event_type in ("price_change", "last_trade_price"):
-                raw_price = msg.get("price")
-                if raw_price is not None:
-                    try:
-                        price = float(raw_price)
-                    except (ValueError, TypeError):
-                        pass
-
-            elif event_type == "book":
-                # Extract mid from best bid and ask
-                bids = msg.get("bids") or []
-                asks = msg.get("asks") or []
-                try:
-                    best_bid = float(bids[0][0]) if bids else None
-                    best_ask = float(asks[0][0]) if asks else None
-                    if best_bid is not None and best_ask is not None:
-                        price = (best_bid + best_ask) / 2.0
-                except (IndexError, ValueError, TypeError):
-                    pass
-
-            if price is None or not asset_id:
-                continue
-
-            # Look up (condition_id, side) from our map; fall back to message fields
-            mapping = self._token_to_market.get(asset_id)
-            if mapping:
-                cid, side = mapping
-            else:
-                cid = msg.get("market") or asset_id
-                side = "yes"  # default when mapping is missing
-            try:
-                self._on_price(cid, side, price)
-            except Exception as exc:
-                log.debug("on_price callback error: %s", exc)
+            # Server may send a single dict or a list of dicts
+            msgs = data if isinstance(data, list) else [data]
+            for msg in msgs:
+                if not isinstance(msg, dict):
+                    continue
+                self._handle_msg(msg)

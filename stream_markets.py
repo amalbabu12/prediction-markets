@@ -47,12 +47,20 @@ def _ts() -> str:
     return datetime.now(timezone.utc).strftime("%H:%M:%S")
 
 
+def _safe_print(line: str) -> None:
+    """Print a line, replacing characters that the console codec can't handle."""
+    try:
+        print(line)
+    except UnicodeEncodeError:
+        print(line.encode("ascii", errors="replace").decode("ascii"))
+
+
 def print_kalshi(market: dict) -> None:
     ticker = market.get("ticker", "?")
     title = market.get("title", "")
     close = market.get("close_time", "")[:10]
     yes_ask = market.get("yes_ask", "?")
-    print(f"[{_ts()}] KALSHI  {ticker:<40s}  yes_ask={yes_ask:>3}¢  closes={close}  {title[:60]}")
+    _safe_print(f"[{_ts()}] KALSHI  {ticker:<40s}  yes_ask={yes_ask:>3}c  closes={close}  {title[:60]}")
 
 
 def print_polymarket(market: dict) -> None:
@@ -64,7 +72,7 @@ def print_polymarket(market: dict) -> None:
         vol_str = f"${float(volume):,.0f}"
     except (TypeError, ValueError):
         vol_str = str(volume)
-    print(f"[{_ts()}] POLY    {cid[:12]}...  vol={vol_str:<10s}  ends={end}  {question[:60]}")
+    _safe_print(f"[{_ts()}] POLY    {cid[:12]}...  vol={vol_str:<10s}  ends={end}  {question[:60]}")
 
 
 # ── DB persistence ────────────────────────────────────────────────────────────
