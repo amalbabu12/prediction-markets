@@ -11,3 +11,8 @@ backtest_results*.json
 .pr_summary.md
 BACKTEST_REPORT.md
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
+kalshi_private.pem
+*.log
+arbs_table.html
+docker-compose.override.yml
