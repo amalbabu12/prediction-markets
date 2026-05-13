@@ -1,253 +1,106 @@
-# Prediction Markets Arbitrage — Data Collector
+# Prediction Markets Arbitrage
 
-Fetches market data from **Kalshi** and **Polymarket** and stores it in a local SQLite database for backtesting arbitrage strategies.
+Cross-platform arbitrage discovery between **Kalshi** and **Polymarket**. Collects market data, finds semantic and tag-overlap pairs, and watches live WebSocket prices for spread-crossing alerts.
 
 ---
 
-## Project Structure
+## Structure
 
 ```
-PredictionMarkets/
-├── clients/
-│   ├── kalshi.py            # Kalshi Trade API v2 client
-│   └── polymarket.py        # Polymarket Gamma + CLOB + Data API clients
-├── collectors/
-│   ├── kalshi_collector.py  # Fetches + persists Kalshi data
-│   └── polymarket_collector.py  # Fetches + persists Polymarket data
-├── db/
-│   └── models.py            # SQLAlchemy models + DB init
-├── main.py                  # CLI entry point
-├── config.py                # Loads env vars
-├── requirements.txt
-├── Dockerfile
-├── docker-compose.yml
-└── .env.example
+clients/        REST + WebSocket clients for Kalshi and Polymarket
+collectors/     Bulk collectors + close_checker (refreshes stale rows)
+db/             SQLAlchemy schema (kalshi_*, polymarket_*, arbitrage_pairs)
+forecasting/    MiniLM embeddings, faiss KNN, LLM same-outcome classifier
+correlations/   Tag-based pipeline: tagger → pair_builder → correlator → watcher
+detect_arbitrage.py    Streaming detector
+backtest_arbitrage.py  Walk-forward backtest (see BACKTEST_REPORT.md)
+main.py                Data-collection CLI
 ```
 
 ---
 
-## What Data Is Collected
+## Data Sources
 
-### Kalshi (`https://api.elections.kalshi.com/trade-api/v2`)
-
-| Data | Endpoint | Stored In |
+| Platform | Endpoints | Auth |
 |---|---|---|
-| Series / categories | `GET /series` | `kalshi_series` |
-| Events (all statuses) | `GET /events` | `kalshi_events` |
-| Markets (all statuses) | `GET /markets` | `kalshi_markets` |
-| Trade history | `GET /markets/trades` | `kalshi_trades` |
-| OHLCV candlesticks (1m / 60m / 1440m) | `GET /series/{s}/markets/{t}/candlesticks` | `kalshi_candlesticks` |
-| Order book snapshots | `GET /markets/{ticker}/orderbook` | `kalshi_orderbook_snaps` |
+| Kalshi | `/series`, `/events`, `/markets`, `/trades`, `/candlesticks`, `/orderbook`, WS | RSA-PSS signed headers |
+| Polymarket Gamma | `/events`, `/markets`, `/tags` | none |
+| Polymarket CLOB | `/markets`, `/prices-history`, `/books`, `/trades`, WS | none |
+| Polymarket Data | `/trades`, `/oi` | none |
 
-Kalshi **requires authentication** (RSA-PSS signed headers) even for market data endpoints. Create an API key at [kalshi.com/account/api](https://kalshi.com/account/api) and set `KALSHI_API_KEY_ID` + `KALSHI_PRIVATE_KEY_PATH` in your `.env`.
+Kalshi prices in cents (1–99); Polymarket prices in [0, 1].
 
-Prices are in **cents (1–99)**.
-
-### Polymarket
-
-Polymarket exposes three APIs, all **fully public** (no auth needed for read access).
-
-#### Gamma API (`https://gamma-api.polymarket.com`)
-
-| Data | Endpoint | Stored In |
-|---|---|---|
-| Category tags | `GET /tags` | *(not persisted — used for filtering)* |
-| Events | `GET /events` | `polymarket_events` |
-| Markets (metadata) | `GET /markets` | `polymarket_markets` |
-
-#### CLOB API (`https://clob.polymarket.com`)
-
-| Data | Endpoint | Stored In |
-|---|---|---|
-| Market list (with token IDs) | `GET /markets` | `polymarket_markets` |
-| Price history (time series) | `GET /prices-history` | `polymarket_price_hist` |
-| Order book snapshots | `POST /books` (batch) | `polymarket_ob_snaps` |
-| Trades | `GET /trades` | `polymarket_trades` |
-
-#### Data API (`https://data-api.polymarket.com`)
-
-| Data | Endpoint | Stored In |
-|---|---|---|
-| Trade history | `GET /trades` | `polymarket_trades` |
-| Open interest | `GET /oi` | *(fetched on demand)* |
-
-Prices are **decimal probabilities (0.0–1.0)**.
-
-Each market has two **token IDs** (ERC1155 on Polygon): one for the YES outcome and one for NO. Price history is stored per-token.
-
----
-
-## Database Schema
-
-SQLite at `./data/markets.db` (WAL mode for concurrency).
-
-**Kalshi tables**
-
-| Table | Key Columns |
-|---|---|
-| `kalshi_series` | `ticker`, `title`, `category`, `frequency` |
-| `kalshi_events` | `event_ticker`, `series_ticker`, `status`, `close_time` |
-| `kalshi_markets` | `ticker`, `event_ticker`, `status`, `yes_bid`, `yes_ask`, `volume`, `result` |
-| `kalshi_trades` | `trade_id`, `ticker`, `yes_price`, `count`, `taker_side`, `created_time` |
-| `kalshi_candlesticks` | `ticker`, `period_interval`, `end_period_ts`, OHLC prices, `volume` |
-| `kalshi_orderbook_snaps` | `ticker`, `snapshot_time`, `yes_bids` (JSON), `no_bids` (JSON) |
-
-**Polymarket tables**
-
-| Table | Key Columns |
-|---|---|
-| `polymarket_events` | `id`, `slug`, `title`, `active`, `closed`, `volume`, `end_date` |
-| `polymarket_markets` | `condition_id`, `token_id_yes`, `token_id_no`, `price_yes`, `price_no`, `volume` |
-| `polymarket_price_hist` | `token_id`, `fidelity`, `ts`, `price` |
-| `polymarket_trades` | `condition_id`, `token_id`, `side`, `size`, `price`, `trade_time` |
-| `polymarket_ob_snaps` | `token_id`, `outcome`, `snapshot_time`, `bids` (JSON), `asks` (JSON) |
-
-Every row also stores `raw_json` with the complete API response so no data is lost.
+Raw JSON is stored on every row.
 
 ---
 
 ## Setup
 
-### 1. Clone and configure
-
 ```bash
-cp .env.example .env
-# Edit .env with your Kalshi API credentials (Polymarket needs none)
-```
-
-**.env fields:**
-```
-KALSHI_API_KEY_ID=your-uuid-from-kalshi-dashboard
-KALSHI_PRIVATE_KEY_PATH=./kalshi_private.pem
-DB_PATH=./data/markets.db
-```
-
-### 2a. Run with Python directly
-
-```bash
+cp .env.example .env  # add KALSHI_API_KEY_ID, KALSHI_PRIVATE_KEY_PATH, GROQ_API_KEY
 pip install -r requirements.txt
 
-# Quick snapshot (markets + orderbooks, ~5 min)
-python main.py snapshot
-
-# Full historical data (candlesticks + all trades — can take hours)
-python main.py history --price-fidelity 60 --candle-intervals 60 1440
-
-# Continuous snapshots every 5 minutes
-python main.py continuous --interval 300
-
-# Skip one platform
-python main.py snapshot --no-kalshi
-python main.py snapshot --no-polymarket
+python main.py snapshot                          # initial market metadata
+python main.py history                           # full backfill (run overnight)
+python main.py continuous --interval 300         # keep fresh
 ```
 
-### 2b. Run with Docker
+Or via Docker: `docker compose run --rm collector`.
+
+---
+
+## Pipelines
+
+**Streaming detector** — embeds each new market, KNN-searches a faiss index, sends batched anchor-groups to an LLM that flags cross-platform same-outcome pairs, then watches WS prices for spread alerts.
 
 ```bash
-# Build image
-docker compose build
-
-# Single snapshot
-docker compose run --rm collector
-
-# Full history (run once)
-docker compose --profile history run --rm history
-
-# Continuous (background, auto-restarts)
-docker compose --profile continuous up -d continuous
+python detect_arbitrage.py --interval 60
 ```
 
-The SQLite database is mounted at `./data/markets.db` on the host so data persists across container runs.
-
----
-
-## CLI Reference
-
-```
-python main.py <mode> [options]
-
-Modes:
-  snapshot     Refresh market metadata and orderbooks (fast, ~5–10 min)
-  history      Full historical OHLCV and trade data (slow, run once)
-  continuous   Repeat snapshot on a schedule (default: every 300s)
-
-Options:
-  --db PATH               SQLite file path (default: ./data/markets.db)
-  --no-kalshi             Skip Kalshi collection
-  --no-polymarket         Skip Polymarket collection
-  --interval N            Seconds between continuous snapshots (default: 300)
-  --start-ts UNIX         History start timestamp (default: 2023-01-01)
-  --end-ts UNIX           History end timestamp (default: now)
-  --price-fidelity MIN    Polymarket bar size in minutes: 1,5,10,30,60,1440 (default: 60)
-  --candle-intervals MIN  Kalshi candle widths, space-separated: 1 60 1440 (default: 60 1440)
-  -v / --verbose          Debug logging
-```
-
----
-
-## Recommended Collection Workflow
+**Tag-based correlation** — four standalone workers sharing the DB:
 
 ```bash
-# 1. Initial metadata snapshot (fast — establishes all market rows in DB)
-python main.py snapshot
+python -m correlations.tagger             # LLM tags markets with causal drivers
+python -m correlations.pair_builder       # Jaccard tag overlap → candidates
+python -m correlations.correlator         # Pearson r over price history
+python -m correlations.divergence_watcher # z-score alerts on live spread
+```
 
-# 2. Backfill all historical data (run overnight)
-python main.py history --price-fidelity 60 --candle-intervals 60 1440
+**Status refresher** — bulk collectors miss settled markets; this walks oldest-checked rows and refreshes them:
 
-# 3. Keep data fresh with continuous snapshots
-python main.py continuous --interval 300
+```bash
+python -m collectors.close_checker --batch 1000 --interval 600
 ```
 
 ---
 
-## API Clients
+## Detected Arbitrage Examples
 
-The clients in `clients/` are usable independently of the collectors:
+Real pairs flagged by the streaming detector:
 
-```python
-from clients.kalshi import KalshiClient
-from clients.polymarket import PolymarketGammaClient, PolymarketCLOBClient, PolymarketDataClient
+| # | Spread | Q1 | Q2 |
+|---|---|---|---|
+| 1 | 0.530 | polymarket — Set 1 Winner: Jodar vs Norrie | kalshi — Will Rafael Jodar win set 1 in the Rafael Jodar vs Cameron Norrie match |
+| 2 | 0.490 | kalshi — Will Mattia Bellucci win set 1 in the Sebastian Korda vs Mattia Bellucci match | polymarket — Set 1 Winner: Korda vs Bellucci |
+| 3 | 0.375 | kalshi — Will Omega win map 1 in the Omega vs. Acend match? | polymarket — Counter-Strike: Acend vs Omega - Map 1 Winner |
+| 5 | 0.235 | kalshi — Maccabi Tel-Aviv vs AS Monaco Winner? | polymarket — Monaco vs. Maccabi Tel Aviv |
+| 6 | 0.220 | polymarket — Will Taylor Swift release a new song in 2026? | kalshi — Will Taylor Swift release a new song 2026? |
+| 7 | 0.175 | polymarket — KHL: Ak Bars Kazan vs. Lada Togliatti | kalshi — Lada Togliatti vs Ak Bars Kazan Winner? |
+| 9 | 0.066 | polymarket — Will Trump say "Crazy Bernie" during the 2026 State of the Union address? | kalshi — Will Trump say "Crazy Bernie" before Apr 1, 2026? |
+| 10 | 0.065 | polymarket — Will Boston Red Sox win the 2026 American League Championship Series? | kalshi — Will Boston win the 2026 Pro Baseball American League Championship? |
+| 11 | 0.065 | polymarket — Will Donald Trump announce a presidential run before 2027? | kalshi — Will Donald Trump announce a run for President of the United States before Jan 1, 2027? |
 
-# Kalshi — needs API key for all endpoints
-k = KalshiClient(api_key_id="...", private_key_pem=open("key.pem").read())
-markets = k.get_all_markets()                              # all statuses
-candles = k.get_candlesticks("INXW", "INXW-25JAN-B4800",
-                              start_ts=..., end_ts=..., period_interval=60)
-trades  = list(k.iter_trades(ticker="INXW-25JAN-B4800"))
-
-# Polymarket Gamma — fully public
-gamma  = PolymarketGammaClient()
-events = gamma.get_all_events(active=True, closed=False)
-
-# Polymarket CLOB — fully public
-clob    = PolymarketCLOBClient()
-book    = clob.get_orderbook("TOKEN_ID")
-history = clob.get_full_price_history("TOKEN_ID", fidelity=60)
-books   = clob.get_orderbooks_batch(["TOKEN_A", "TOKEN_B", ...])  # batch
-
-# Polymarket Data — fully public
-data   = PolymarketDataClient()
-trades = data.get_trades(market="CONDITION_ID")
-```
+See `BACKTEST_REPORT.md` for accuracy and P&L analysis.
 
 ---
 
 ## Rate Limits
 
-| Platform | Tier | Limit | Default in client |
-|---|---|---|---|
-| Kalshi | Basic | 20 req/s | 10 req/s |
-| Polymarket Gamma | — | ~50 req/s | 30 req/s |
-| Polymarket CLOB | — | ~150 req/s | 80 req/s |
-| Polymarket Data | — | ~20 req/s | 15 req/s |
+| Platform | Tier | Default in client |
+|---|---|---|
+| Kalshi | 20 req/s | 10 |
+| Polymarket Gamma | ~50 req/s | 30 |
+| Polymarket CLOB | ~150 req/s | 80 |
+| Polymarket Data | ~20 req/s | 15 |
 
-All clients use a leaky-bucket rate limiter and exponential backoff on 429s.
-
----
-
-## Next Steps
-
-- [ ] Arbitrage signal detection (compare Kalshi YES prices vs Polymarket YES probabilities for equivalent events)
-- [ ] WebSocket feed for real-time orderbook updates
-- [ ] Backtesting framework over stored candlestick / price history data
-- [ ] Scheduled collection via cron or a proper task queue
+Leaky-bucket limiter + exponential backoff on 429s, fail-fast on 404s.
