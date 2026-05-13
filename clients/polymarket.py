@@ -77,8 +77,20 @@ class _BaseClient:
                     logger.warning("%s 429 rate limit. Sleeping %ds.", self.BASE_URL, backoff)
                     time.sleep(backoff)
                     continue
+                # Fail fast on 404 — deleted markets won't return
+                if resp.status_code == 404:
+                    resp.raise_for_status()
                 resp.raise_for_status()
                 return resp.json()
+            except requests.HTTPError as exc:
+                if exc.response is not None and exc.response.status_code == 404:
+                    raise
+                if attempt == retries - 1:
+                    logger.error("Request failed (%s%s): %s", self.BASE_URL, path, exc)
+                    raise
+                backoff = 2 ** attempt
+                logger.warning("Error attempt %d/%d (%s): %s. Retry in %ds.", attempt + 1, retries, path, exc, backoff)
+                time.sleep(backoff)
             except requests.RequestException as exc:
                 if attempt == retries - 1:
                     logger.error("Request failed (%s%s): %s", self.BASE_URL, path, exc)

@@ -148,9 +148,22 @@ class KalshiClient:
                     authenticated = True
                     continue
 
+                # Fail fast on 404 — settled markets are removed from the API
+                # and will never come back; retrying is pure latency.
+                if resp.status_code == 404:
+                    resp.raise_for_status()
                 resp.raise_for_status()
                 return resp.json()
 
+            except requests.HTTPError as exc:
+                if exc.response is not None and exc.response.status_code == 404:
+                    raise
+                if attempt == retries - 1:
+                    logger.error("Kalshi request failed (%s): %s", path, exc)
+                    raise
+                backoff = 2 ** attempt
+                logger.warning("Kalshi error attempt %d/%d: %s. Retry in %ds.", attempt + 1, retries, exc, backoff)
+                time.sleep(backoff)
             except requests.RequestException as exc:
                 if attempt == retries - 1:
                     logger.error("Kalshi request failed (%s): %s", path, exc)
