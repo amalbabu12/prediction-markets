@@ -24,10 +24,26 @@ import threading
 from typing import Callable, Optional
 
 import websockets
+import websockets.exceptions
 
 log = logging.getLogger(__name__)
 
 WS_URL = "wss://ws-subscriptions-clob.polymarket.com/ws/market"
+
+
+def _book_top_price(levels: list) -> Optional[float]:
+    """
+    Return the price of the top level. Polymarket book entries may be either
+    {"price": "...", "size": "..."} dicts or [price, size] arrays.
+    """
+    if not levels:
+        return None
+    top = levels[0]
+    if isinstance(top, dict):
+        raw = top.get("price")
+    else:
+        raw = top[0]
+    return float(raw) if raw is not None else None
 
 
 class PolymarketWSClient:
@@ -105,8 +121,8 @@ class PolymarketWSClient:
                             "type": "market",
                         }))
 
-                    recv_task = asyncio.create_task(self._recv_loop(ws))
-                    send_task = asyncio.create_task(self._send_loop(ws))
+                    recv_task = asyncio.create_task(self._recv_loop(ws), name="recv")
+                    send_task = asyncio.create_task(self._send_loop(ws), name="send")
                     done, pending = await asyncio.wait(
                         [recv_task, send_task],
                         return_when=asyncio.FIRST_COMPLETED,
@@ -115,8 +131,15 @@ class PolymarketWSClient:
                         t.cancel()
                     for t in done:
                         exc = t.exception()
-                        if exc:
-                            log.warning("Polymarket WS task error: %s", exc)
+                        if exc is None:
+                            continue
+                        if isinstance(exc, websockets.exceptions.ConnectionClosedOK):
+                            log.info("Polymarket WS %s closed cleanly", t.get_name())
+                        else:
+                            log.warning(
+                                "Polymarket WS %s task error: %s: %r",
+                                t.get_name(), type(exc).__name__, exc,
+                            )
 
             except Exception as exc:
                 log.warning("Polymarket WS error: %s — reconnecting in 5s", exc)
@@ -162,11 +185,11 @@ class PolymarketWSClient:
             bids = msg.get("bids") or []
             asks = msg.get("asks") or []
             try:
-                best_bid = float(bids[0][0]) if bids else None
-                best_ask = float(asks[0][0]) if asks else None
+                best_bid = _book_top_price(bids)
+                best_ask = _book_top_price(asks)
                 if best_bid is not None and best_ask is not None:
                     price = (best_bid + best_ask) / 2.0
-            except (IndexError, ValueError, TypeError):
+            except (IndexError, KeyError, ValueError, TypeError):
                 pass
 
         if price is None or not asset_id:
@@ -196,4 +219,10 @@ class PolymarketWSClient:
             for msg in msgs:
                 if not isinstance(msg, dict):
                     continue
-                self._handle_msg(msg)
+                try:
+                    self._handle_msg(msg)
+                except Exception as exc:
+                    log.warning(
+                        "Polymarket WS handler error: %s: %r (msg keys=%s)",
+                        type(exc).__name__, exc, list(msg.keys()),
+                    )

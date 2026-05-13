@@ -43,8 +43,9 @@ from db.models import init_db, ArbitragePair, WatchedPair
 from forecasting.embedder import embed_questions
 from forecasting.loader import load_markets
 from forecasting.llm import OpenAICompatibleBackend
-from forecasting.relationships import _discover_pairs_in_group
+from forecasting.relationships import _discover_pairs_in_group, _discover_pairs_in_batch
 from stream_markets import poll_kalshi, poll_polymarket, _ts
+from correlations.tagger import KALSHI_SKIP_PREFIXES
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 
@@ -54,6 +55,10 @@ MIN_CONFIDENCE = 0.8
 # Minimum cosine similarity for a cross-platform neighbor to trigger an LLM call.
 # IndexFlatIP on L2-normalised vectors returns dot product = cosine similarity.
 MIN_CROSS_PLATFORM_SIM = 0.55
+# Number of new-market anchors batched into a single LLM call. Larger = fewer
+# calls but bigger prompts and higher risk of the model dropping a group from
+# its response.
+LLM_BATCH_SIZE = 5
 
 
 # ── Price / question / id extraction from raw API dicts ──────────────────────
@@ -286,25 +291,55 @@ class StreamingDetector:
         return self._thread_local.backend
 
     def _llm_loop(self) -> None:
-        """Background worker: drain the queue and make LLM calls one at a time."""
+        """Background worker: drain the queue in chunks of LLM_BATCH_SIZE anchors
+        and evaluate them in one LLM call per chunk."""
         while True:
-            item = self._llm_queue.get()
-            if item is None:  # shutdown sentinel
+            # Block until at least one item is available, then drain up to
+            # LLM_BATCH_SIZE-1 more without blocking.
+            first = self._llm_queue.get()
+            if first is None:  # shutdown sentinel
                 break
-            group_df, group = item
-            try:
-                _t0 = time.time()
-                question = group[0]["question"]
-                print(f"[{_ts()}] LLM     calling for \"{question[:60]}\" (group={len(group)}, queue={self._llm_queue.qsize()})", flush=True)
-                category, raw_pairs = asyncio.run(
-                    _discover_pairs_in_group(self._get_backend(), group_df)
-                )
-                print(f"[{_ts()}] LLM     done in {time.time()-_t0:.1f}s  cat={category}  pairs={len(raw_pairs)}", flush=True)
-            except Exception as exc:
-                logging.getLogger(__name__).warning("LLM call failed: %s", exc)
-                continue
+            batch = [first]
+            while len(batch) < LLM_BATCH_SIZE:
+                try:
+                    item = self._llm_queue.get_nowait()
+                except queue.Empty:
+                    break
+                if item is None:
+                    # Re-queue the shutdown sentinel so the outer loop sees it
+                    # after this batch is processed.
+                    self._llm_queue.put(None)
+                    break
+                batch.append(item)
 
+            self._process_batch(batch)
+
+    def _process_batch(self, batch: list) -> None:
+        groups = [grp for (_df, grp) in batch]
+        try:
+            _t0 = time.time()
+            print(
+                f"[{_ts()}] LLM     batch_call anchors={len(groups)} "
+                f"total_questions={sum(len(g) for g in groups)} "
+                f"queue_remaining={self._llm_queue.qsize()}",
+                flush=True,
+            )
+            results = asyncio.run(
+                _discover_pairs_in_batch(self._get_backend(), groups)
+            )
+            total_pairs = sum(len(p) for _c, p in results)
+            print(
+                f"[{_ts()}] LLM     batch_done in {time.time()-_t0:.1f}s  "
+                f"pairs={total_pairs}",
+                flush=True,
+            )
+        except Exception as exc:
+            logging.getLogger(__name__).warning("LLM batch call failed: %s", exc)
+            return
+
+        for group, (category, raw_pairs) in zip(groups, results):
             q_to_row = {r["question"]: r for r in group}
+            anchor_q = group[0]["question"]
 
             for pair in raw_pairs:
                 is_same = pair.get("is_same_outcome")
@@ -314,8 +349,15 @@ class StreamingDetector:
                 if conf < self._min_confidence:
                     continue
 
-                row_a = q_to_row.get(pair.get("question_a", ""))
-                row_b = q_to_row.get(pair.get("question_b", ""))
+                q_a = pair.get("question_a", "")
+                q_b = pair.get("question_b", "")
+                # Enforce anchor-involvement: skip any pair the LLM returned
+                # that doesn't involve this group's anchor.
+                if anchor_q not in (q_a, q_b):
+                    continue
+
+                row_a = q_to_row.get(q_a)
+                row_b = q_to_row.get(q_b)
                 if row_a is None or row_b is None:
                     continue
                 if row_a["platform"] == row_b["platform"]:
@@ -371,8 +413,9 @@ class StreamingDetector:
 
         if not question or not market_id:
             return
-        # KXMV are Kalshi multi-game parlay composites — no Polymarket equivalent
-        if platform == "kalshi" and market_id.startswith("KXMV"):
+        # Skip Kalshi prefixes with no plausible Polymarket counterpart (parlays,
+        # sports player props, etc.) — see correlations.tagger.KALSHI_SKIP_PREFIXES.
+        if platform == "kalshi" and market_id.startswith(KALSHI_SKIP_PREFIXES):
             return
 
         emb = self._model.encode([question], normalize_embeddings=True).astype(np.float32)
@@ -617,8 +660,8 @@ def main() -> None:
                         help="Stop after N hours (0 = run forever)")
     parser.add_argument("--spread", type=float, default=ENTRY_SPREAD_THRESHOLD,
                         help=f"Min spread to alert (default: {ENTRY_SPREAD_THRESHOLD})")
-    parser.add_argument("--lookback", type=int, default=300,
-                        help="Seconds back to look for new markets per poll (default: 300)")
+    parser.add_argument("--lookback", type=int, default=None,
+                        help="Seconds back to look for new markets per poll (default: same as --interval to avoid gaps)")
     parser.add_argument("--k", type=int, default=K_NEIGHBORS,
                         help=f"Nearest neighbors per new market (default: {K_NEIGHBORS})")
     parser.add_argument("--monitor-interval", type=int, default=None,
@@ -626,6 +669,8 @@ def main() -> None:
     args = parser.parse_args()
     if args.monitor_interval is None:
         args.monitor_interval = args.interval
+    if args.lookback is None:
+        args.lookback = args.interval
 
     def backend_factory():
         return OpenAICompatibleBackend(

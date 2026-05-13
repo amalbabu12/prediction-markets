@@ -170,6 +170,120 @@ async def _discover_pairs_in_group(
     return "other", []
 
 
+# ── Batched variant ───────────────────────────────────────────────────────────
+
+_BATCH_PAIRS_USER = """\
+Below are several GROUPS of prediction market questions. Each group has one \
+ANCHOR question plus its semantic neighbors. For EACH group, identify pairs \
+that are ARBITRAGE-WORTHY — i.e. where the two questions are so closely matched \
+that buying YES on one and YES on the other is a near-certain combined win (or \
+loss).
+
+ONLY flag pairs where ONE side is the ANCHOR of that group. Do not flag pairs \
+between two non-anchor questions — those have already been evaluated against \
+their own anchors in prior calls. Do not flag pairs across different groups.
+
+SAME OUTCOME (is_same_outcome=true): The two markets resolve on the EXACT SAME \
+underlying event with the SAME threshold, the SAME time window, and the SAME \
+direction. Both will resolve YES together or NO together with very high certainty.
+
+DIFFERENT OUTCOME (is_same_outcome=false): Direct logical inverses where one \
+resolving YES forces the other to resolve NO.
+
+OMIT a pair entirely if you are not highly confident (>= 0.8) in the relationship. \
+It is better to miss a pair than to flag a false arbitrage. When in doubt, leave it out.
+
+Copy question text exactly as it appears below.
+
+Valid categories: {categories}
+
+{groups_block}
+
+Respond with EXACTLY this JSON format — one entry per group, in order:
+{{
+  "groups": [
+    {{
+      "group": 1,
+      "category": "<one of the valid categories>",
+      "pairs": [
+        {{
+          "question_a": "<exact text — must be the anchor>",
+          "question_b": "<exact text — must be a neighbor>",
+          "is_same_outcome": true,
+          "confidence_score": 0.85,
+          "rationale": "one sentence"
+        }}
+      ]
+    }}
+  ]
+}}
+
+Return an empty pairs array for any group with no high-confidence matches."""
+
+
+def _format_groups_block(groups: list[list[dict]]) -> str:
+    """Render each group as a numbered block. groups[i][0] is the anchor."""
+    sections: list[str] = []
+    for gi, members in enumerate(groups, start=1):
+        anchor_q = members[0]["question"]
+        body = [f"GROUP {gi} — ANCHOR: {anchor_q}"]
+        body.append(f"  A. (anchor) {anchor_q}")
+        for ni, m in enumerate(members[1:], start=1):
+            body.append(f"  N{ni}. {m['question']}")
+        sections.append("\n".join(body))
+    return "\n\n".join(sections)
+
+
+async def _discover_pairs_in_batch(
+    backend: LLMBackend,
+    groups: list[list[dict]],
+) -> list[tuple[str, list[dict]]]:
+    """
+    Process N anchor-groups in a single LLM call.
+
+    Each group is members[0] = anchor + members[1:] = neighbors. The prompt
+    instructs the LLM to only flag pairs involving the anchor of each group,
+    so neighbor↔neighbor pairs (already evaluated in prior calls when each
+    neighbor was itself an anchor) are not re-evaluated.
+
+    Returns a list of (category, pairs_list) tuples — one entry per input
+    group, in order. Missing groups in the response default to ("other", []).
+    """
+    if not groups:
+        return []
+
+    prompt = _BATCH_PAIRS_USER.format(
+        categories=", ".join(_CATEGORIES),
+        groups_block=_format_groups_block(groups),
+    )
+    # 512 tokens per group is generous for category + a few pairs each.
+    max_tokens = 512 * len(groups) + 256
+    try:
+        raw = await backend.generate(prompt, system_prompt=_PAIRS_SYSTEM, max_new_tokens=max_tokens)
+        data = extract_json(raw)
+    except Exception as exc:
+        logger.warning("Batch pair discovery failed: %s", exc)
+        return [("other", []) for _ in groups]
+
+    out: list[tuple[str, list[dict]]] = [("other", []) for _ in groups]
+    if not isinstance(data, dict):
+        return out
+    entries = data.get("groups") or []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        gi = entry.get("group")
+        if not isinstance(gi, int) or gi < 1 or gi > len(groups):
+            continue
+        category = entry.get("category", "other")
+        category = category if category in _CATEGORIES else "other"
+        pairs = entry.get("pairs") or []
+        if not isinstance(pairs, list):
+            pairs = []
+        out[gi - 1] = (category, pairs)
+    return out
+
+
 # ── Main entry point ──────────────────────────────────────────────────────────
 
 async def discover_relationships(
