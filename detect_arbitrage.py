@@ -360,8 +360,10 @@ class StreamingDetector:
                 row_b = q_to_row.get(q_b)
                 if row_a is None or row_b is None:
                     continue
-                if row_a["platform"] == row_b["platform"]:
-                    continue
+                # Allow both cross-platform AND same-platform pairs:
+                # same-platform contradictions (e.g. R wins / D wins of the
+                # same race, both on Polymarket) yield real arbitrage when
+                # yes_a + yes_b < $1 (contradiction) or via NO-NO when same.
 
                 yes_a, no_a = row_a.get("price_yes"), row_a.get("price_no")
                 yes_b, no_b = row_b.get("price_yes"), row_b.get("price_no")
@@ -434,11 +436,25 @@ class StreamingDetector:
 
             n_total = self._index.ntotal
             if n_total > 0:
-                k = min(self._k, n_total)
-                scores, indices = self._index.search(emb, k)
+                # Oversample then keep top-(K/2) per platform. Same-platform
+                # clusters (esp. Polymarket sports) used to dominate top-K and
+                # crowd out the cross-platform Kalshi neighbors — searching
+                # wider and bucketing by platform guarantees a balanced group.
+                k_per = max(1, self._k // 2)
+                k_search = min(self._k * 3, n_total)
+                scores, indices = self._index.search(emb, k_search)
+                per_platform_count: dict[str, int] = {}
                 for score, idx in zip(scores[0], indices[0]):
-                    if 0 <= idx < len(self._meta) and score >= MIN_CROSS_PLATFORM_SIM:
-                        group.append(self._meta[idx])
+                    if not (0 <= idx < len(self._meta)):
+                        continue
+                    if score < MIN_CROSS_PLATFORM_SIM:
+                        continue
+                    neighbor = self._meta[idx]
+                    plat = neighbor["platform"]
+                    if per_platform_count.get(plat, 0) >= k_per:
+                        continue
+                    group.append(neighbor)
+                    per_platform_count[plat] = per_platform_count.get(plat, 0) + 1
 
             self._index.add(emb)
             self._meta.append(new_row)
@@ -446,12 +462,9 @@ class StreamingDetector:
         if len(group) < 2:
             return
 
-        # Skip LLM if all neighbors are on the same platform — nothing to arbitrage
-        platforms_in_group = {r["platform"] for r in group}
-        if len(platforms_in_group) < 2:
-            return
-
-        # Enqueue for background LLM processing — pollers never block on LLM.
+        # Same-platform contradictions (e.g. "Republican wins X" vs "Democrat
+        # wins X" both on Polymarket) ARE valid arb pairs and we want them.
+        # No cross-platform precondition here — defer to the LLM to find pairs.
         self._llm_queue.put((pd.DataFrame(group), group))
 
 
