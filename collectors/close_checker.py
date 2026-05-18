@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import threading
 import time
 from datetime import datetime, timezone
 from typing import Optional
@@ -34,6 +35,38 @@ from clients.polymarket import PolymarketCLOBClient
 from db.models import init_db
 
 log = logging.getLogger("collectors.close_checker")
+
+# Hard wall-clock cap for a single market HTTP call. requests' own timeout is
+# read-only and does NOT bound a hung DNS getaddrinfo or a trickling keepalive
+# socket — which is exactly what froze close_checker for 15h (Kalshi) and 4h+
+# (Polymarket). This wrapper runs the call on a daemon thread and abandons it
+# if it blows the deadline, so one bad socket can never stall the whole loop.
+HTTP_DEADLINE_S = 45
+
+
+class _DeadlineExceeded(Exception):
+    pass
+
+
+def _with_deadline(fn, *args, deadline: float = HTTP_DEADLINE_S):
+    box: dict = {}
+
+    def _run() -> None:
+        try:
+            box["v"] = fn(*args)
+        except Exception as exc:  # noqa: BLE001 — re-raised on the caller thread
+            box["e"] = exc
+
+    t = threading.Thread(target=_run, daemon=True)
+    t.start()
+    t.join(deadline)
+    if t.is_alive():
+        # Thread is wedged in a syscall with no timeout; leak it (daemon) and
+        # move on. At a few stalls/day this never accumulates meaningfully.
+        raise _DeadlineExceeded(f"hard {deadline:.0f}s deadline exceeded")
+    if "e" in box:
+        raise box["e"]
+    return box.get("v")
 
 
 def _now() -> datetime:
@@ -94,7 +127,11 @@ def _refresh_kalshi(
     """Returns (outcome, new_status). outcome is one of:
        'updated', 'unchanged', '404', 'error'."""
     try:
-        market = client.get_market(ticker)
+        market = _with_deadline(client.get_market, ticker)
+    except _DeadlineExceeded as exc:
+        log.warning("kalshi get_market(%s) %s — skipping", ticker, exc)
+        _touch_kalshi(session, ticker)
+        return ("error", None)
     except Exception as exc:
         if _is_http_404(exc):
             _touch_kalshi(session, ticker)
@@ -138,7 +175,11 @@ def _refresh_polymarket(
     session: Session, clob: PolymarketCLOBClient, condition_id: str
 ) -> tuple[str, Optional[bool]]:
     try:
-        market = clob.get_market(condition_id)
+        market = _with_deadline(clob.get_market, condition_id)
+    except _DeadlineExceeded as exc:
+        log.warning("polymarket get_market(%s) %s — skipping", condition_id, exc)
+        _touch_polymarket(session, condition_id)
+        return ("error", None)
     except Exception as exc:
         if _is_http_404(exc):
             _touch_polymarket(session, condition_id)
